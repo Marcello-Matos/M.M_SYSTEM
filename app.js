@@ -1,127 +1,339 @@
 ﻿// ==================== UTILITARIOS ====================
-const formatarValor = (valor) => {
+function formatarValor(valor) {
     return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
-};
+}
 
-const gerarCodigo = () => {
+function gerarCodigo() {
     return 'RP' + Math.floor(Math.random() * 9000 + 1000);
-};
+}
 
-const mostrarToast = (mensagem) => {
+function mostrarToast(mensagem) {
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toastMsg');
+    if (!toast) return;
     toastMsg.textContent = mensagem;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2500);
-};
+}
 
-// ==================== TEMA ====================
-const toggleTheme = () => {
-    const html = document.documentElement;
-    const icon = document.getElementById('themeIcon');
-    const isDark = html.getAttribute('data-theme') === 'dark';
-    
-    if (isDark) {
-        html.removeAttribute('data-theme');
-        icon.className = 'fas fa-moon';
-        localStorage.setItem('theme', 'light');
-    } else {
-        html.setAttribute('data-theme', 'dark');
-        icon.className = 'fas fa-sun';
-        localStorage.setItem('theme', 'dark');
-    }
-};
+// ==================== DADOS ====================
+let produtos = JSON.parse(localStorage.getItem('produtos')) || [];
+let vendas = JSON.parse(localStorage.getItem('vendas')) || [];
 
-// Carregar tema salvo
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        document.getElementById('themeIcon').className = 'fas fa-sun';
+function salvarProdutos() {
+    localStorage.setItem('produtos', JSON.stringify(produtos));
+}
+
+function salvarVendas() {
+    localStorage.setItem('vendas', JSON.stringify(vendas));
+}
+
+// ==================== DETECTAR VERSAO ====================
+const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+// ==================== DESKTOP: ABAS ====================
+function mostrarAba(aba) {
+    document.querySelectorAll('.aba-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById('aba-' + aba).classList.add('active');
+    event.target.classList.add('active');
+    
+    if (aba === 'estoque') carregarEstoqueDesktop();
+    if (aba === 'vendas') carregarVendasDesktop();
+    if (aba === 'relatorio') atualizarRelatorioDesktop();
+}
+
+// ==================== DESKTOP: ESTOQUE ====================
+function calcularValores() {
+    const custo = parseFloat(document.getElementById('custo').value) || 0;
+    const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
+    if (custo > 0 && porcentagem >= 0) {
+        const venda = custo + (custo * porcentagem / 100);
+        document.getElementById('venda').value = formatarValor(venda);
+    }
+}
+
+function adicionarProduto(e) {
+    e.preventDefault();
+    
+    const custo = parseFloat(document.getElementById('custo').value) || 0;
+    const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
+    const venda = custo + (custo * porcentagem / 100);
+    const quantidade = parseInt(document.getElementById('quantidade').value) || 0;
+    
+    const produto = {
+        id: Date.now(),
+        codigo: gerarCodigo(),
+        nome: document.getElementById('nome').value,
+        quantidade: quantidade,
+        quantidadeVendida: 0,
+        custo: custo,
+        porcentagem: porcentagem,
+        venda: venda,
+        data: new Date().toLocaleDateString()
+    };
+    
+    produtos.push(produto);
+    salvarProdutos();
+    
+    alert('Produto cadastrado com sucesso!');
+    limparFormulario();
+    carregarEstoqueDesktop();
+    if (isMobile) atualizarDashboard();
+}
+
+function carregarEstoqueDesktop(filtro) {
+    const tbody = document.getElementById('listaEstoque');
+    if (!tbody) return;
+    
+    let produtosFiltrados = produtos;
+    
+    if (filtro === 'disponivel') {
+        produtosFiltrados = produtos.filter(p => p.quantidade > p.quantidadeVendida);
+    } else if (filtro === 'vendido') {
+        produtosFiltrados = produtos.filter(p => p.quantidadeVendida > 0);
     }
     
-    // Data atual
-    const hoje = new Date().toLocaleDateString('pt-BR', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    if (produtosFiltrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">Nenhum produto encontrado</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = produtosFiltrados.map(p => {
+        const disponivel = p.quantidade - (p.quantidadeVendida || 0);
+        let status = 'Disponivel';
+        let statusClass = 'status-disponivel';
+        if (disponivel === 0) {
+            status = 'Vendido';
+            statusClass = 'status-vendido';
+        } else if (p.quantidadeVendida > 0) {
+            status = 'Parcial';
+            statusClass = 'status-parcial';
+        }
+        
+        return `
+            <tr>
+                <td><strong>${p.codigo}</strong></td>
+                <td>${p.nome}</td>
+                <td>${p.quantidade}</td>
+                <td>${p.quantidadeVendida || 0}</td>
+                <td>${formatarValor(p.custo)}</td>
+                <td>${formatarValor(p.venda)}</td>
+                <td><span class="status ${statusClass}">${status}</span></td>
+                <td>
+                    <button class="btn btn-danger" onclick="excluirProduto(${p.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filtrarEstoque(filtro) {
+    document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    carregarEstoqueDesktop(filtro);
+}
+
+function excluirProduto(id) {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    produtos = produtos.filter(p => p.id !== id);
+    salvarProdutos();
+    carregarEstoqueDesktop();
+    if (isMobile) atualizarDashboard();
+}
+
+function limparFormulario() {
+    document.getElementById('produtoForm').reset();
+    document.getElementById('venda').value = '';
+}
+
+// ==================== DESKTOP: VENDAS ====================
+function carregarSelectProdutosDesktop() {
+    const select = document.getElementById('produtoVenda');
+    if (!select) return;
+    
+    const disponiveis = produtos.filter(p => p.quantidade > (p.quantidadeVendida || 0));
+    
+    select.innerHTML = '<option value="">Escolha um produto disponivel</option>' +
+        disponiveis.map(p => `
+            <option value="${p.id}" data-custo="${p.custo}" data-venda="${p.venda}">
+                ${p.codigo} - ${p.nome} (Disp: ${p.quantidade - (p.quantidadeVendida || 0)})
+            </option>
+        `).join('');
+}
+
+function calcularVenda() {
+    const select = document.getElementById('produtoVenda');
+    const qtd = parseInt(document.getElementById('quantidadeVenda').value) || 0;
+    
+    if (!select.value || qtd <= 0) return;
+    
+    const option = select.options[select.selectedIndex];
+    const vendaUnit = parseFloat(option.dataset.venda);
+    const custoUnit = parseFloat(option.dataset.custo);
+    
+    document.getElementById('precoVenda').value = formatarValor(vendaUnit);
+    document.getElementById('totalVenda').value = formatarValor(vendaUnit * qtd);
+    document.getElementById('lucroVenda').value = formatarValor(vendaUnit - custoUnit);
+    document.getElementById('lucroTotalVenda').value = formatarValor((vendaUnit - custoUnit) * qtd);
+}
+
+function registrarVendaDesktop(e) {
+    e.preventDefault();
+    
+    const produtoId = parseInt(document.getElementById('produtoVenda').value);
+    const qtd = parseInt(document.getElementById('quantidadeVenda').value);
+    
+    if (!produtoId || !qtd) {
+        alert('Selecione um produto e quantidade!');
+        return;
+    }
+    
+    const produto = produtos.find(p => p.id === produtoId);
+    if (!produto) {
+        alert('Produto nao encontrado!');
+        return;
+    }
+    
+    const disponivel = produto.quantidade - (produto.quantidadeVendida || 0);
+    if (qtd > disponivel) {
+        alert(`Quantidade indisponivel! Tem apenas ${disponivel} unidades.`);
+        return;
+    }
+    
+    produto.quantidadeVendida = (produto.quantidadeVendida || 0) + qtd;
+    salvarProdutos();
+    
+    const venda = {
+        id: Date.now(),
+        data: new Date().toLocaleDateString(),
+        produtoId: produto.id,
+        codigo: produto.codigo,
+        nome: produto.nome,
+        quantidade: qtd,
+        vendaUnit: produto.venda,
+        total: produto.venda * qtd,
+        lucro: (produto.venda - produto.custo) * qtd
+    };
+    
+    vendas.push(venda);
+    salvarVendas();
+    
+    alert('Venda registrada com sucesso!');
+    document.getElementById('vendaForm').reset();
+    document.getElementById('precoVenda').value = '';
+    document.getElementById('totalVenda').value = '';
+    document.getElementById('lucroVenda').value = '';
+    document.getElementById('lucroTotalVenda').value = '';
+    
+    carregarVendasDesktop();
+    carregarSelectProdutosDesktop();
+    if (isMobile) atualizarDashboard();
+}
+
+function carregarVendasDesktop() {
+    const tbody = document.getElementById('listaVendas');
+    if (!tbody) return;
+    
+    if (vendas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">Nenhuma venda registrada</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = vendas.slice().reverse().map(v => `
+        <tr>
+            <td>${v.data}</td>
+            <td><strong>${v.codigo}</strong></td>
+            <td>${v.nome}</td>
+            <td>${v.quantidade}</td>
+            <td>${formatarValor(v.vendaUnit)}</td>
+            <td>${formatarValor(v.total)}</td>
+            <td><strong style="color:#27ae60;">${formatarValor(v.lucro)}</strong></td>
+        </tr>
+    `).join('');
+}
+
+// ==================== DESKTOP: RELATORIO ====================
+function atualizarRelatorioDesktop() {
+    let totalInvestido = 0;
+    let totalVendido = 0;
+    let lucroReal = 0;
+    let valorEstoque = 0;
+    
+    produtos.forEach(p => {
+        const qtdVendida = p.quantidadeVendida || 0;
+        const qtdEstoque = p.quantidade - qtdVendida;
+        
+        totalInvestido += p.custo * p.quantidade;
+        totalVendido += p.venda * qtdVendida;
+        lucroReal += (p.venda - p.custo) * qtdVendida;
+        valorEstoque += p.custo * qtdEstoque;
     });
-    const dateEl = document.getElementById('currentDate');
-    if (dateEl) dateEl.textContent = hoje.charAt(0).toUpperCase() + hoje.slice(1);
     
-    atualizarDashboard();
-    carregarEstoque();
-    carregarVendas();
-    atualizarRelatorio();
-    carregarSelectProdutos();
-});
+    const elInvestido = document.getElementById('totalInvestido');
+    const elVendido = document.getElementById('totalVendido');
+    const elLucro = document.getElementById('totalLucro');
+    const elEstoque = document.getElementById('totalEstoque');
+    
+    if (elInvestido) elInvestido.textContent = formatarValor(totalInvestido);
+    if (elVendido) elVendido.textContent = formatarValor(totalVendido);
+    if (elLucro) elLucro.textContent = formatarValor(lucroReal);
+    if (elEstoque) elEstoque.textContent = formatarValor(valorEstoque);
+}
 
-// ==================== NAVEGACAO ====================
-const mostrarTela = (tela) => {
-    // Esconder todas as telas
+// ==================== MOBILE: NAVEGACAO ====================
+function mostrarTela(tela) {
     document.querySelectorAll('.tela').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     
-    // Mostrar tela selecionada
     const telaEl = document.getElementById('tela-' + tela);
     if (telaEl) telaEl.classList.add('active');
     
-    // Atualizar nav
     const navItem = document.querySelector(`.nav-item[data-tela="${tela}"]`);
     if (navItem) navItem.classList.add('active');
     
-    // Atualizar dados
     if (tela === 'dashboard') atualizarDashboard();
-    if (tela === 'estoque') carregarEstoque();
-    if (tela === 'vendas') carregarVendas();
-    if (tela === 'relatorio') atualizarRelatorio();
+    if (tela === 'estoque') carregarEstoqueMobile();
+    if (tela === 'vendas') carregarVendasMobile();
+    if (tela === 'relatorio') atualizarRelatorioMobile();
     
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-};
+}
 
-// ==================== MODAL ====================
-const abrirModal = (modalId) => {
+// ==================== MOBILE: MODAL ====================
+function abrirModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         
         if (modalId === 'modal-vender') {
-            carregarSelectProdutos();
+            carregarSelectProdutosMobile();
         }
     }
-};
+}
 
-const fecharModal = (modalId) => {
+function fecharModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = '';
-        
-        // Limpar formularios
         const form = modal.querySelector('form');
         if (form) form.reset();
     }
-};
+}
 
-// Fechar modal ao clicar fora
-window.onclick = (e) => {
+window.onclick = function(e) {
     if (e.target.classList.contains('modal')) {
         fecharModal(e.target.id);
     }
 };
 
-// ==================== DADOS ====================
-let produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-let vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-
-const salvarProdutos = () => localStorage.setItem('produtos', JSON.stringify(produtos));
-const salvarVendas = () => localStorage.setItem('vendas', JSON.stringify(vendas));
-
-// ==================== DASHBOARD ====================
-const atualizarDashboard = () => {
+// ==================== MOBILE: DASHBOARD ====================
+function atualizarDashboard() {
     const totalProdutos = produtos.length;
     const hoje = new Date().toLocaleDateString();
     const vendasHoje = vendas.filter(v => v.data === hoje).reduce((sum, v) => sum + v.quantidade, 0);
@@ -144,17 +356,17 @@ const atualizarDashboard = () => {
     if (elVendas) elVendas.textContent = vendasHoje;
     if (elLucro) elLucro.textContent = formatarValor(lucroTotal);
     if (elInvestido) elInvestido.textContent = formatarValor(investido);
-};
+}
 
-// ==================== CADASTRAR PRODUTO ====================
-const calcularPrecoVenda = () => {
+// ==================== MOBILE: CADASTRAR ====================
+function calcularPrecoVendaMobile() {
     const custo = parseFloat(document.getElementById('custoProduto').value) || 0;
     const margem = parseFloat(document.getElementById('margemProduto').value) || 0;
     const preco = custo + (custo * margem / 100);
     document.getElementById('precoVenda').value = formatarValor(preco);
-};
+}
 
-const cadastrarProduto = (e) => {
+function cadastrarProdutoMobile(e) {
     e.preventDefault();
     
     const nome = document.getElementById('nomeProduto').value.trim();
@@ -186,20 +398,19 @@ const cadastrarProduto = (e) => {
     fecharModal('modal-cadastrar');
     mostrarToast('Produto cadastrado com sucesso!');
     atualizarDashboard();
-    carregarEstoque();
-};
+    carregarEstoqueMobile();
+}
 
-// ==================== ESTOQUE ====================
+// ==================== MOBILE: ESTOQUE ====================
 let filtroAtual = 'todos';
 let buscaAtual = '';
 
-const carregarEstoque = () => {
-    const lista = document.getElementById('listaEstoque');
+function carregarEstoqueMobile() {
+    const lista = document.getElementById('listaEstoqueMobile');
     if (!lista) return;
     
     let filtrados = produtos;
     
-    // Filtro de busca
     if (buscaAtual) {
         filtrados = filtrados.filter(p => 
             p.nome.toLowerCase().includes(buscaAtual.toLowerCase()) ||
@@ -207,7 +418,6 @@ const carregarEstoque = () => {
         );
     }
     
-    // Filtro de status
     if (filtroAtual === 'disponivel') {
         filtrados = filtrados.filter(p => p.quantidade > (p.quantidadeVendida || 0));
     } else if (filtroAtual === 'vendido') {
@@ -229,7 +439,7 @@ const carregarEstoque = () => {
         const percentual = Math.round((disponivel / p.quantidade) * 100);
         
         let status = 'disponivel';
-        let statusText = 'Disponível';
+        let statusText = 'Disponivel';
         if (disponivel === 0) {
             status = 'vendido';
             statusText = 'Vendido';
@@ -257,37 +467,37 @@ const carregarEstoque = () => {
             </div>
         `;
     }).join('');
-};
+}
 
-const filtrarEstoque = () => {
+function filtrarEstoqueMobile() {
     buscaAtual = document.getElementById('buscaEstoque').value;
-    carregarEstoque();
-};
+    carregarEstoqueMobile();
+}
 
-const filtrarStatus = (status, btn) => {
+function filtrarStatusMobile(status, btn) {
     filtroAtual = status;
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
-    carregarEstoque();
-};
+    carregarEstoqueMobile();
+}
 
-const verDetalhesProduto = (id) => {
+function verDetalhesProduto(id) {
     const p = produtos.find(prod => prod.id === id);
     if (!p) return;
     
     const disponivel = p.quantidade - (p.quantidadeVendida || 0);
     
-    if (confirm(`${p.nome}\nCódigo: ${p.codigo}\nQuantidade: ${p.quantidade}\nVendido: ${p.quantidadeVendida || 0}\nDisponível: ${disponivel}\nCusto: ${formatarValor(p.custo)}\nVenda: ${formatarValor(p.venda)}\n\nDeseja excluir este produto?`)) {
+    if (confirm(`${p.nome}\nCodigo: ${p.codigo}\nQuantidade: ${p.quantidade}\nVendido: ${p.quantidadeVendida || 0}\nDisponivel: ${disponivel}\nCusto: ${formatarValor(p.custo)}\nVenda: ${formatarValor(p.venda)}\n\nDeseja excluir este produto?`)) {
         produtos = produtos.filter(prod => prod.id !== id);
         salvarProdutos();
-        mostrarToast('Produto excluído!');
-        carregarEstoque();
+        mostrarToast('Produto excluido!');
+        carregarEstoqueMobile();
         atualizarDashboard();
     }
-};
+}
 
-// ==================== VENDAS ====================
-const carregarSelectProdutos = () => {
+// ==================== MOBILE: VENDAS ====================
+function carregarSelectProdutosMobile() {
     const select = document.getElementById('selectProduto');
     if (!select) return;
     
@@ -300,9 +510,9 @@ const carregarSelectProdutos = () => {
                 ${p.nome} (${disp} disp.)
             </option>`;
         }).join('');
-};
+}
 
-const atualizarInfoVenda = () => {
+function atualizarInfoVendaMobile() {
     const select = document.getElementById('selectProduto');
     const qtd = parseInt(document.getElementById('qtdVenda').value) || 0;
     
@@ -323,9 +533,9 @@ const atualizarInfoVenda = () => {
     document.getElementById('precoUnitVenda').textContent = formatarValor(vendaUnit);
     document.getElementById('totalVenda').textContent = formatarValor(vendaUnit * qtd);
     document.getElementById('lucroVenda').textContent = formatarValor((vendaUnit - custoUnit) * qtd);
-};
+}
 
-const registrarVenda = (e) => {
+function registrarVendaMobile(e) {
     e.preventDefault();
     
     const produtoId = parseInt(document.getElementById('selectProduto').value);
@@ -338,21 +548,19 @@ const registrarVenda = (e) => {
     
     const produto = produtos.find(p => p.id === produtoId);
     if (!produto) {
-        mostrarToast('Produto não encontrado!');
+        mostrarToast('Produto nao encontrado!');
         return;
     }
     
     const disponivel = produto.quantidade - (produto.quantidadeVendida || 0);
     if (qtd > disponivel) {
-        mostrarToast(`Apenas ${disponivel} unidades disponíveis!`);
+        mostrarToast(`Apenas ${disponivel} unidades disponiveis!`);
         return;
     }
     
-    // Atualizar produto
     produto.quantidadeVendida = (produto.quantidadeVendida || 0) + qtd;
     salvarProdutos();
     
-    // Registrar venda
     const venda = {
         id: Date.now(),
         data: new Date().toLocaleDateString(),
@@ -371,12 +579,12 @@ const registrarVenda = (e) => {
     fecharModal('modal-vender');
     mostrarToast('Venda registrada com sucesso!');
     atualizarDashboard();
-    carregarVendas();
-    carregarEstoque();
-};
+    carregarVendasMobile();
+    carregarEstoqueMobile();
+}
 
-const carregarVendas = () => {
-    const lista = document.getElementById('listaVendas');
+function carregarVendasMobile() {
+    const lista = document.getElementById('listaVendasMobile');
     if (!lista) return;
     
     let totalVendido = 0;
@@ -404,7 +612,7 @@ const carregarVendas = () => {
     
     lista.innerHTML = vendas.slice().reverse().map(v => `
         <div class="sale-card">
-            <div class="product-img" style="width:44px;height:44px;font-size:1.2rem;">
+            <div class="product-img" style="width:40px;height:40px;font-size:1rem;">
                 <i class="fas fa-shopping-bag"></i>
             </div>
             <div class="sale-info">
@@ -417,10 +625,10 @@ const carregarVendas = () => {
             </div>
         </div>
     `).join('');
-};
+}
 
-// ==================== RELATORIO ====================
-const atualizarRelatorio = () => {
+// ==================== MOBILE: RELATORIO ====================
+function atualizarRelatorioMobile() {
     let totalInvestido = 0;
     let totalVendido = 0;
     let lucroReal = 0;
@@ -446,7 +654,6 @@ const atualizarRelatorio = () => {
     if (elLucro) elLucro.textContent = formatarValor(lucroReal);
     if (elEstoque) elEstoque.textContent = formatarValor(valorEstoque);
     
-    // Progresso ROI
     const roi = totalInvestido > 0 ? Math.min((totalVendido / totalInvestido) * 100, 100) : 0;
     const progressFill = document.getElementById('progressROI');
     const textROI = document.getElementById('textROI');
@@ -455,8 +662,70 @@ const atualizarRelatorio = () => {
         setTimeout(() => progressFill.style.width = roi + '%', 100);
     }
     if (textROI) textROI.textContent = roi.toFixed(1) + '% do investimento retornado';
-};
+}
 
-// ==================== EVENT LISTENERS ====================
-document.getElementById('formCadastrar')?.addEventListener('submit', cadastrarProduto);
-document.getElementById('formVender')?.addEventListener('submit', registrarVenda);
+// ==================== TEMA ====================
+function toggleTheme() {
+    const html = document.documentElement;
+    const icon = document.getElementById('themeIcon');
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    
+    if (isDark) {
+        html.removeAttribute('data-theme');
+        if (icon) icon.className = 'fas fa-moon';
+        localStorage.setItem('theme', 'light');
+    } else {
+        html.setAttribute('data-theme', 'dark');
+        if (icon) icon.className = 'fas fa-sun';
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar tema
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = 'fas fa-sun';
+    }
+    
+    // Data atual mobile
+    const dateEl = document.getElementById('currentDate');
+    if (dateEl) {
+        const hoje = new Date().toLocaleDateString('pt-BR', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+        dateEl.textContent = hoje.charAt(0).toUpperCase() + hoje.slice(1);
+    }
+    
+    // Desktop event listeners
+    const custoInput = document.getElementById('custo');
+    const porcentagemInput = document.getElementById('porcentagem');
+    if (custoInput) custoInput.addEventListener('input', calcularValores);
+    if (porcentagemInput) porcentagemInput.addEventListener('input', calcularValores);
+    
+    const produtoForm = document.getElementById('produtoForm');
+    if (produtoForm) produtoForm.addEventListener('submit', adicionarProduto);
+    
+    const produtoVenda = document.getElementById('produtoVenda');
+    const qtdVenda = document.getElementById('quantidadeVenda');
+    if (produtoVenda) produtoVenda.addEventListener('change', calcularVenda);
+    if (qtdVenda) qtdVenda.addEventListener('input', calcularVenda);
+    
+    const vendaForm = document.getElementById('vendaForm');
+    if (vendaForm) vendaForm.addEventListener('submit', registrarVendaDesktop);
+    
+    // Inicializar
+    carregarEstoqueDesktop();
+    carregarSelectProdutosDesktop();
+    carregarVendasDesktop();
+    atualizarRelatorioDesktop();
+    
+    // Mobile init
+    atualizarDashboard();
+    carregarEstoqueMobile();
+    carregarVendasMobile();
+    atualizarRelatorioMobile();
+});
