@@ -1,11 +1,11 @@
 ﻿// Configuracao do Firebase - M.M System
 const firebaseConfig = {
-    apiKey: "AIzaSyD-8V8aUcCj9mL4n8mP2qR5tY7wQ1eT3uI",
-    authDomain: "mm-system-estoque.firebaseapp.com",
-    projectId: "mm-system-estoque",
-    storageBucket: "mm-system-estoque.appspot.com",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdef1234567890"
+    apiKey: "AIzaSyB5yPH0GfQKN2KZIAaMct8JLFKliXdGeDY",
+    authDomain: "mmsysten.firebaseapp.com",
+    projectId: "mmsysten",
+    storageBucket: "mmsysten.firebasestorage.app",
+    messagingSenderId: "741827383663",
+    appId: "1:741827383663:web:984e0ccb601223160f189a"
 };
 
 // Inicializar Firebase
