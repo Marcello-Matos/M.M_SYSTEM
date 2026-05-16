@@ -1,4 +1,7 @@
-﻿// ==================== UTILITARIOS ====================
+﻿// ==================== FIREBASE CONFIG ====================
+// Configuracao sera carregada do firebase-config.js
+
+// ==================== UTILITARIOS ====================
 function formatarValor(valor) {
     return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
 }
@@ -16,16 +19,154 @@ function mostrarToast(mensagem) {
     setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-// ==================== DADOS ====================
-let produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-let vendas = JSON.parse(localStorage.getItem('vendas')) || [];
+// ==================== VARIAVEIS GLOBAIS ====================
+let produtos = [];
+let vendas = [];
+let db = null;
+let userId = null;
 
-function salvarProdutos() {
-    localStorage.setItem('produtos', JSON.stringify(produtos));
+// ==================== INICIALIZACAO FIREBASE ====================
+function inicializarFirebase() {
+    // Verificar se Firebase esta disponivel
+    if (typeof firebase === 'undefined') {
+        console.log('Firebase nao disponivel, usando localStorage');
+        usarLocalStorage();
+        return;
+    }
+    
+    try {
+        db = firebase.firestore();
+        
+        // Gerar ou recuperar ID unico do usuario/dispositivo
+        userId = localStorage.getItem('mm_user_id');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('mm_user_id', userId);
+        }
+        
+        console.log('Firebase inicializado. UserID:', userId);
+        
+        // Carregar dados do Firestore
+        carregarDadosFirestore();
+        
+        // Escutar mudancas em tempo real
+        escutarMudancas();
+        
+    } catch (erro) {
+        console.error('Erro ao inicializar Firebase:', erro);
+        usarLocalStorage();
+    }
 }
 
-function salvarVendas() {
-    localStorage.setItem('vendas', JSON.stringify(vendas));
+// ==================== FIRESTORE: CARREGAR DADOS ====================
+async function carregarDadosFirestore() {
+    if (!db) return;
+    
+    try {
+        // Carregar produtos
+        const produtosDoc = await db.collection('dados').doc(userId).get();
+        if (produtosDoc.exists) {
+            const dados = produtosDoc.data();
+            produtos = dados.produtos || [];
+            vendas = dados.vendas || [];
+            console.log('Dados carregados do Firestore:', produtos.length, 'produtos,', vendas.length, 'vendas');
+        } else {
+            // Primeiro acesso - tentar migrar do localStorage
+            const produtosLocal = localStorage.getItem('produtos');
+            const vendasLocal = localStorage.getItem('vendas');
+            
+            if (produtosLocal || vendasLocal) {
+                produtos = JSON.parse(produtosLocal || '[]');
+                vendas = JSON.parse(vendasLocal || '[]');
+                await salvarDadosFirestore();
+                console.log('Dados migrados do localStorage para Firestore');
+            }
+        }
+        
+        atualizarTodasTelas();
+        
+    } catch (erro) {
+        console.error('Erro ao carregar dados:', erro);
+        usarLocalStorage();
+    }
+}
+
+// ==================== FIRESTORE: SALVAR DADOS ====================
+async function salvarDadosFirestore() {
+    if (!db) {
+        // Fallback para localStorage
+        localStorage.setItem('produtos', JSON.stringify(produtos));
+        localStorage.setItem('vendas', JSON.stringify(vendas));
+        return;
+    }
+    
+    try {
+        await db.collection('dados').doc(userId).set({
+            produtos: produtos,
+            vendas: vendas,
+            ultimaAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Dados salvos no Firestore');
+    } catch (erro) {
+        console.error('Erro ao salvar:', erro);
+        // Fallback para localStorage
+        localStorage.setItem('produtos', JSON.stringify(produtos));
+        localStorage.setItem('vendas', JSON.stringify(vendas));
+    }
+}
+
+// ==================== FIRESTORE: ESCUTAR MUDANCAS ====================
+function escutarMudancas() {
+    if (!db) return;
+    
+    db.collection('dados').doc(userId).onSnapshot((doc) => {
+        if (doc.exists) {
+            const dados = doc.data();
+            const novosProdutos = dados.produtos || [];
+            const novasVendas = dados.vendas || [];
+            
+            // Verificar se houve mudancas
+            if (JSON.stringify(produtos) !== JSON.stringify(novosProdutos) ||
+                JSON.stringify(vendas) !== JSON.stringify(novasVendas)) {
+                
+                produtos = novosProdutos;
+                vendas = novasVendas;
+                console.log('Dados atualizados em tempo real');
+                atualizarTodasTelas();
+            }
+        }
+    }, (erro) => {
+        console.error('Erro ao escutar mudancas:', erro);
+    });
+}
+
+// ==================== LOCALSTORAGE FALLBACK ====================
+function usarLocalStorage() {
+    console.log('Usando localStorage como fallback');
+    db = null;
+    
+    const produtosLocal = localStorage.getItem('produtos');
+    const vendasLocal = localStorage.getItem('vendas');
+    
+    produtos = JSON.parse(produtosLocal || '[]');
+    vendas = JSON.parse(vendasLocal || '[]');
+    
+    atualizarTodasTelas();
+}
+
+// ==================== ATUALIZAR TODAS AS TELAS ====================
+function atualizarTodasTelas() {
+    if (isMobile) {
+        atualizarDashboard();
+        carregarEstoqueMobile();
+        carregarVendasMobile();
+        atualizarRelatorioMobile();
+    } else {
+        carregarEstoqueDesktop();
+        carregarSelectProdutosDesktop();
+        carregarVendasDesktop();
+        atualizarRelatorioDesktop();
+    }
 }
 
 // ==================== DETECTAR VERSAO ====================
@@ -75,7 +216,7 @@ function adicionarProduto(e) {
     };
     
     produtos.push(produto);
-    salvarProdutos();
+    salvarDadosFirestore();
     
     alert('Produto cadastrado com sucesso!');
     limparFormulario();
@@ -140,7 +281,7 @@ function filtrarEstoque(filtro) {
 function excluirProduto(id) {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
     produtos = produtos.filter(p => p.id !== id);
-    salvarProdutos();
+    salvarDadosFirestore();
     carregarEstoqueDesktop();
     if (isMobile) atualizarDashboard();
 }
@@ -205,7 +346,6 @@ function registrarVendaDesktop(e) {
     }
     
     produto.quantidadeVendida = (produto.quantidadeVendida || 0) + qtd;
-    salvarProdutos();
     
     const venda = {
         id: Date.now(),
@@ -220,7 +360,7 @@ function registrarVendaDesktop(e) {
     };
     
     vendas.push(venda);
-    salvarVendas();
+    salvarDadosFirestore();
     
     alert('Venda registrada com sucesso!');
     document.getElementById('vendaForm').reset();
@@ -393,7 +533,7 @@ function cadastrarProdutoMobile(e) {
     };
     
     produtos.push(produto);
-    salvarProdutos();
+    salvarDadosFirestore();
     
     fecharModal('modal-cadastrar');
     mostrarToast('Produto cadastrado com sucesso!');
@@ -489,7 +629,7 @@ function verDetalhesProduto(id) {
     
     if (confirm(`${p.nome}\nCodigo: ${p.codigo}\nQuantidade: ${p.quantidade}\nVendido: ${p.quantidadeVendida || 0}\nDisponivel: ${disponivel}\nCusto: ${formatarValor(p.custo)}\nVenda: ${formatarValor(p.venda)}\n\nDeseja excluir este produto?`)) {
         produtos = produtos.filter(prod => prod.id !== id);
-        salvarProdutos();
+        salvarDadosFirestore();
         mostrarToast('Produto excluido!');
         carregarEstoqueMobile();
         atualizarDashboard();
@@ -559,7 +699,6 @@ function registrarVendaMobile(e) {
     }
     
     produto.quantidadeVendida = (produto.quantidadeVendida || 0) + qtd;
-    salvarProdutos();
     
     const venda = {
         id: Date.now(),
@@ -574,7 +713,7 @@ function registrarVendaMobile(e) {
     };
     
     vendas.push(venda);
-    salvarVendas();
+    salvarDadosFirestore();
     
     fecharModal('modal-vender');
     mostrarToast('Venda registrada com sucesso!');
@@ -683,6 +822,9 @@ function toggleTheme() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Firebase primeiro
+    inicializarFirebase();
+    
     // Carregar tema
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -716,16 +858,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const vendaForm = document.getElementById('vendaForm');
     if (vendaForm) vendaForm.addEventListener('submit', registrarVendaDesktop);
-    
-    // Inicializar
-    carregarEstoqueDesktop();
-    carregarSelectProdutosDesktop();
-    carregarVendasDesktop();
-    atualizarRelatorioDesktop();
-    
-    // Mobile init
-    atualizarDashboard();
-    carregarEstoqueMobile();
-    carregarVendasMobile();
-    atualizarRelatorioMobile();
 });
