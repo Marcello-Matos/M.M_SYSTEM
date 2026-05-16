@@ -2,227 +2,365 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Estoque e Vendas - Roupas</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>M.M System - Controle de Estoque</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1><i class="fas fa-tshirt"></i> Controle de Estoque e Vendas</h1>
-            <p>Gerencie suas compras e vendas</p>
+    <!-- App Container -->
+    <div id="app">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>M.M System</h1>
+                        <span>Controle de Estoque</span>
+                    </div>
+                </div>
+                <button class="btn-icon" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
         </header>
 
-        <!-- ABAS -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="mostrarAba('estoque')">
-                <i class="fas fa-box"></i> Estoque
-            </button>
-            <button class="tab-btn" onclick="mostrarAba('vendas')">
-                <i class="fas fa-shopping-cart"></i> Vender
-            </button>
-            <button class="tab-btn" onclick="mostrarAba('relatorio')">
-                <i class="fas fa-chart-bar"></i> Relatorio
-            </button>
-        </div>
-
-        <!-- ABA ESTOQUE -->
-        <div id="aba-estoque" class="aba-content active">
-            <section class="form-section">
-                <h2><i class="fas fa-plus-circle"></i> Cadastrar Nova Compra</h2>
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Tela: Dashboard -->
+            <section id="tela-dashboard" class="tela active">
+                <div class="dashboard-header">
+                    <h2>Resumo</h2>
+                    <p class="date" id="currentDate"></p>
+                </div>
                 
-                <form id="produtoForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Codigo</label>
-                            <input type="text" id="codigo" readonly placeholder="Gerado automaticamente">
+                <div class="cards-grid">
+                    <div class="card card-primary" onclick="mostrarTela('estoque')">
+                        <div class="card-icon">
+                            <i class="fas fa-tshirt"></i>
                         </div>
-                        <div class="form-group">
-                            <label>Nome do Produto</label>
-                            <input type="text" id="nome" placeholder="Ex: Camiseta Basica" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Quantidade Comprada</label>
-                            <input type="number" id="quantidade" placeholder="0" min="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Valor de Custo Unitario (R$)</label>
-                            <input type="number" id="custo" placeholder="0,00" step="0.01" min="0" required>
+                        <div class="card-info">
+                            <span class="card-label">Produtos</span>
+                            <span class="card-value" id="dashTotalProdutos">0</span>
                         </div>
                     </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Porcentagem de Lucro (%)</label>
-                            <input type="number" id="porcentagem" placeholder="0" min="0" required>
+                    
+                    <div class="card card-success" onclick="mostrarTela('vendas')">
+                        <div class="card-icon">
+                            <i class="fas fa-shopping-bag"></i>
                         </div>
-                        <div class="form-group">
-                            <label>Valor de Venda Unitario (R$)</label>
-                            <input type="text" id="venda" readonly placeholder="Calculado automaticamente">
+                        <div class="card-info">
+                            <span class="card-label">Vendas Hoje</span>
+                            <span class="card-value" id="dashTotalVendas">0</span>
                         </div>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Cadastrar Compra
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
-                            <i class="fas fa-eraser"></i> Limpar
-                        </button>
+                    
+                    <div class="card card-warning">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-label">Lucro Total</span>
+                            <span class="card-value" id="dashLucroTotal">R$ 0,00</span>
+                        </div>
                     </div>
-                </form>
-            </section>
-
-            <section class="list-section">
-                <h2><i class="fas fa-box"></i> Meu Estoque</h2>
-                
-                <div class="filtros">
-                    <button class="btn-filter active" onclick="filtrarEstoque('todos')">Todos</button>
-                    <button class="btn-filter" onclick="filtrarEstoque('disponivel')">Disponiveis</button>
-                    <button class="btn-filter" onclick="filtrarEstoque('vendido')">Vendidos</button>
+                    
+                    <div class="card card-danger">
+                        <div class="card-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-label">Investido</span>
+                            <span class="card-value" id="dashInvestido">R$ 0,00</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="table-container">
-                    <table id="tabelaEstoque">
-                        <thead>
-                            <tr>
-                                <th>Codigo</th>
-                                <th>Nome</th>
-                                <th>Qtd</th>
-                                <th>Qtd Vendida</th>
-                                <th>Custo</th>
-                                <th>Venda</th>
-                                <th>Status</th>
-                                <th>Acoes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="listaEstoque">
-                        </tbody>
-                    </table>
+                <div class="section-title">
+                    <h3>Ações Rápidas</h3>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="action-btn" onclick="abrirModal('modal-cadastrar')">
+                        <div class="action-icon bg-primary">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <span>Cadastrar Produto</span>
+                    </button>
+                    <button class="action-btn" onclick="abrirModal('modal-vender')">
+                        <div class="action-icon bg-success">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <span>Registrar Venda</span>
+                    </button>
+                    <button class="action-btn" onclick="mostrarTela('relatorio')">
+                        <div class="action-icon bg-warning">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <span>Relatórios</span>
+                    </button>
+                    <button class="action-btn" onclick="mostrarTela('estoque')">
+                        <div class="action-icon bg-info">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <span>Ver Estoque</span>
+                    </button>
                 </div>
             </section>
-        </div>
 
-        <!-- ABA VENDAS -->
-        <div id="aba-vendas" class="aba-content">
-            <section class="form-section">
-                <h2><i class="fas fa-shopping-cart"></i> Registrar Venda</h2>
-                
-                <form id="vendaForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Selecione o Produto</label>
-                            <select id="produtoVenda" required>
-                                <option value="">Escolha um produto disponivel</option>
-                            </select>
+            <!-- Tela: Estoque -->
+            <section id="tela-estoque" class="tela">
+                <div class="page-header">
+                    <button class="btn-back" onclick="mostrarTela('dashboard')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2>Estoque</h2>
+                    <button class="btn-icon" onclick="abrirModal('modal-cadastrar')">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="buscaEstoque" placeholder="Buscar produto..." oninput="filtrarEstoque()">
+                </div>
+
+                <div class="filter-chips">
+                    <button class="chip active" onclick="filtrarStatus('todos', this)">Todos</button>
+                    <button class="chip" onclick="filtrarStatus('disponivel', this)">Disponíveis</button>
+                    <button class="chip" onclick="filtrarStatus('vendido', this)">Vendidos</button>
+                </div>
+
+                <div class="products-list" id="listaEstoque">
+                    <!-- Produtos serão inseridos aqui -->
+                </div>
+            </section>
+
+            <!-- Tela: Vendas -->
+            <section id="tela-vendas" class="tela">
+                <div class="page-header">
+                    <button class="btn-back" onclick="mostrarTela('dashboard')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2>Vendas</h2>
+                    <button class="btn-icon" onclick="abrirModal('modal-vender')">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="sales-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Total Vendido</span>
+                        <span class="summary-value" id="vendasTotal">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Lucro</span>
+                        <span class="summary-value success" id="vendasLucro">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <h3>Histórico</h3>
+                </div>
+
+                <div class="sales-list" id="listaVendas">
+                    <!-- Vendas serão inseridas aqui -->
+                </div>
+            </section>
+
+            <!-- Tela: Relatório -->
+            <section id="tela-relatorio" class="tela">
+                <div class="page-header">
+                    <button class="btn-back" onclick="mostrarTela('dashboard')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2>Relatório</h2>
+                </div>
+
+                <div class="report-cards">
+                    <div class="report-card">
+                        <div class="report-icon bg-danger">
+                            <i class="fas fa-arrow-down"></i>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Quantidade a Vender</label>
-                            <input type="number" id="quantidadeVenda" placeholder="0" min="1" required>
+                        <div class="report-info">
+                            <span class="report-label">Total Investido</span>
+                            <span class="report-value" id="relInvestido">R$ 0,00</span>
                         </div>
                     </div>
+                    
+                    <div class="report-card">
+                        <div class="report-icon bg-success">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="report-info">
+                            <span class="report-label">Total Vendido</span>
+                            <span class="report-value" id="relVendido">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-icon bg-primary">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="report-info">
+                            <span class="report-label">Lucro Real</span>
+                            <span class="report-value" id="relLucro">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-icon bg-warning">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="report-info">
+                            <span class="report-label">Valor em Estoque</span>
+                            <span class="report-value" id="relEstoque">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="progress-section">
+                    <h3>Retorno do Investimento</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressROI"></div>
+                    </div>
+                    <span class="progress-text" id="textROI">0% retornado</span>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="mostrarTela('dashboard')" data-tela="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Início</span>
+            </button>
+            <button class="nav-item" onclick="mostrarTela('estoque')" data-tela="estoque">
+                <i class="fas fa-tshirt"></i>
+                <span>Estoque</span>
+            </button>
+            <button class="nav-item center-btn" onclick="abrirModal('modal-cadastrar')">
+                <div class="center-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+            </button>
+            <button class="nav-item" onclick="mostrarTela('vendas')" data-tela="vendas">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Vendas</span>
+            </button>
+            <button class="nav-item" onclick="mostrarTela('relatorio')" data-tela="relatorio">
+                <i class="fas fa-chart-pie"></i>
+                <span>Relatório</span>
+            </button>
+        </nav>
+
+        <!-- Modal: Cadastrar Produto -->
+        <div class="modal" id="modal-cadastrar">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Novo Produto</h3>
+                    <button class="btn-close" onclick="fecharModal('modal-cadastrar')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="formCadastrar" onsubmit="cadastrarProduto(event)">
+                    <div class="form-group">
+                        <label>Nome do Produto</label>
+                        <input type="text" id="nomeProduto" placeholder="Ex: Camiseta Nike" required>
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Valor de Venda Unitario (R$)</label>
+                            <label>Quantidade</label>
+                            <input type="number" id="qtdProduto" placeholder="0" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Custo (R$)</label>
+                            <input type="number" id="custoProduto" placeholder="0,00" step="0.01" min="0" required oninput="calcularPrecoVenda()">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Margem (%)</label>
+                            <input type="number" id="margemProduto" placeholder="100" value="100" min="0" oninput="calcularPrecoVenda()">
+                        </div>
+                        <div class="form-group">
+                            <label>Preço Venda (R$)</label>
                             <input type="text" id="precoVenda" readonly>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Total da Venda (R$)</label>
-                            <input type="text" id="totalVenda" readonly>
-                        </div>
                     </div>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Cadastrar Produto
+                    </button>
+                </form>
+            </div>
+        </div>
 
+        <!-- Modal: Vender -->
+        <div class="modal" id="modal-vender">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Registrar Venda</h3>
+                    <button class="btn-close" onclick="fecharModal('modal-vender')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="formVender" onsubmit="registrarVenda(event)">
+                    <div class="form-group">
+                        <label>Produto</label>
+                        <select id="selectProduto" required onchange="atualizarInfoVenda()">
+                            <option value="">Selecione um produto</option>
+                        </select>
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Lucro por Unidade (R$)</label>
-                            <input type="text" id="lucroVenda" readonly>
+                            <label>Quantidade</label>
+                            <input type="number" id="qtdVenda" placeholder="0" min="1" required oninput="atualizarInfoVenda()">
                         </div>
-                        
                         <div class="form-group">
-                            <label>Lucro Total (R$)</label>
-                            <input type="text" id="lucroTotalVenda" readonly>
+                            <label>Disponível</label>
+                            <input type="text" id="dispVenda" readonly value="-">
                         </div>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Confirmar Venda
-                        </button>
+                    <div class="venda-info">
+                        <div class="venda-item">
+                            <span>Preço Unit.</span>
+                            <strong id="precoUnitVenda">R$ 0,00</strong>
+                        </div>
+                        <div class="venda-item">
+                            <span>Total</span>
+                            <strong id="totalVenda">R$ 0,00</strong>
+                        </div>
+                        <div class="venda-item highlight">
+                            <span>Lucro Est.</span>
+                            <strong id="lucroVenda">R$ 0,00</strong>
+                        </div>
                     </div>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i>
+                        Confirmar Venda
+                    </button>
                 </form>
-            </section>
-
-            <section class="list-section">
-                <h2><i class="fas fa-history"></i> Historico de Vendas</h2>
-                
-                <div class="table-container">
-                    <table id="tabelaVendas">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Codigo</th>
-                                <th>Nome</th>
-                                <th>Qtd</th>
-                                <th>Venda Unit</th>
-                                <th>Total</th>
-                                <th>Lucro</th>
-                            </tr>
-                        </thead>
-                        <tbody id="listaVendas">
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            </div>
         </div>
 
-        <!-- ABA RELATORIO -->
-        <div id="aba-relatorio" class="aba-content">
-            <section class="totais-section">
-                <h2><i class="fas fa-chart-pie"></i> Resumo Financeiro</h2>
-                
-                <div class="totais-grid">
-                    <div class="total-card investimento">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <div class="total-info">
-                            <span class="total-label">Total Investido</span>
-                            <span class="total-value" id="totalInvestido">R$ 0,00</span>
-                        </div>
-                    </div>
-                    
-                    <div class="total-card vendas">
-                        <i class="fas fa-shopping-bag"></i>
-                        <div class="total-info">
-                            <span class="total-label">Total em Vendas</span>
-                            <span class="total-value" id="totalVendido">R$ 0,00</span>
-                        </div>
-                    </div>
-                    
-                    <div class="total-card lucro">
-                        <i class="fas fa-chart-line"></i>
-                        <div class="total-info">
-                            <span class="total-label">Lucro Real</span>
-                            <span class="total-value" id="totalLucro">R$ 0,00</span>
-                        </div>
-                    </div>
-                    
-                    <div class="total-card estoque">
-                        <i class="fas fa-box"></i>
-                        <div class="total-info">
-                            <span class="total-label">Valor em Estoque</span>
-                            <span class="total-value" id="totalEstoque">R$ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        <!-- Toast Notification -->
+        <div class="toast" id="toast">
+            <i class="fas fa-check-circle"></i>
+            <span id="toastMsg">Operação realizada!</span>
         </div>
+
     </div>
 
     <script src="app.js"></script>
