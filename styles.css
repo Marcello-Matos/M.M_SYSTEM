@@ -86,19 +86,17 @@ body.login-active #mobile-version {
 .login-logo {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
+    justify-content: center;
+    margin-bottom: 20px;
 }
 
-.login-logo i {
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    color: #0b55df;
-    background: white;
-    border-radius: 50%;
+.login-logo-img {
+    max-width: 380px;
+    max-height: 140px;
+    width: auto;
+    height: auto;
+    display: block;
+    filter: brightness(0) invert(1) drop-shadow(0 4px 12px rgba(255,255,255,0.35));
 }
 
 .login-welcome h1 {
@@ -230,6 +228,16 @@ body {
     text-align: center;
     color: white;
     margin-bottom: 30px;
+}
+
+.header-logo-img {
+    max-width: 480px;
+    max-height: 160px;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px;
+    filter: brightness(0) invert(1) drop-shadow(0 4px 16px rgba(255,255,255,0.4));
 }
 
 .logout-btn {
@@ -659,19 +667,15 @@ tr:hover {
     .logo {
         display: flex;
         align-items: center;
-        gap: 12px;
     }
     
-    .logo-icon {
-        width: 40px;
-        height: 40px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        color: white;
+    .mobile-logo-img {
+        max-height: 72px;
+        max-width: 240px;
+        width: auto;
+        height: auto;
+        display: block;
+        filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(255,255,255,0.3));
     }
     
     .logo-text h1 {

@@ -379,7 +379,7 @@ function carregarEstoqueDesktop(filtro) {
         const disp = p.quantidade - (p.quantidadeVendida || 0);
         let status = 'Disponivel', cls = 'status-disponivel';
         if (disp === 0) { status = 'Vendido'; cls = 'status-vendido'; }
-        else if (p.quantidadeVendida > 0) { status = 'Parcial'; cls = 'status-parcial'; }
+        else if (p.quantidadeVendida > 0) { status = 'Vendido'; cls = 'status-vendido'; }
         
         return `<tr><td><strong>${p.codigo}</strong></td><td>${p.nome}</td><td>${p.quantidade}</td><td>${p.quantidadeVendida||0}</td><td>${formatarValor(p.custo)}</td><td>${formatarValor(p.venda)}</td><td><span class="status ${cls}">${status}</span></td><td><button class="btn btn-danger" onclick="excluirProduto(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`;
     }).join('');
@@ -584,7 +584,7 @@ function carregarEstoqueMobile() {
         const pct = Math.round((disp/p.quantidade)*100);
         let st = 'disponivel', txt = 'Disponivel';
         if (disp===0) { st='vendido'; txt='Vendido'; }
-        else if (p.quantidadeVendida>0) { st='parcial'; txt=pct+'%'; }
+        else if (p.quantidadeVendida>0) { st='vendido'; txt='Vendido'; }
         
         return `<div class="product-card" onclick="verDetalhesProduto(${p.id})">
             <div class="product-img"><i class="fas fa-tshirt"></i></div>
