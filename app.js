@@ -1,6 +1,25 @@
 // ==================== FIREBASE CONFIG ====================
 // Configuracao sera carregada do firebase-config.js
 
+// ==================== AUTENTICACAO ANONIMA ====================
+async function autenticarUsuario() {
+    if (typeof firebase === 'undefined' || !firebase.auth) return null;
+    
+    try {
+        let user = firebase.auth().currentUser;
+        
+        if (!user) {
+            const credencial = await firebase.auth().signInAnonymously();
+            user = credencial.user;
+            console.log('Login anonimo realizado:', user.uid);
+        }
+        
+        return user.uid;
+    } catch (erro) {
+        console.error('Erro na autenticacao:', erro);
+        return null;
+    }
+}
 // ==================== UTILITARIOS ====================
 function formatarValor(valor) {
     return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
@@ -759,7 +778,7 @@ function carregarVendasMobile() {
             </div>
             <div class="sale-info">
                 <div class="sale-product">${v.nome}</div>
-                <div class="sale-detail">${v.data} · ${v.quantidade} un · ${v.codigo}</div>
+                <div class="sale-detail">${v.data} Ã‚Â· ${v.quantidade} un Ã‚Â· ${v.codigo}</div>
             </div>
             <div class="sale-value">
                 <div class="value">${formatarValor(v.total)}</div>
