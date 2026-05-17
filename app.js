@@ -124,7 +124,8 @@ function calcularValores() {
     const custo = parseFloat(document.getElementById('custo').value) || 0;
     const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
     if (custo > 0) {
-        document.getElementById('venda').value = formatarValor(custo + (custo * porcentagem / 100));
+        const venda = custo + (custo * porcentagem / 100);
+        document.getElementById('venda').value = formatarValor(venda);
     }
 }
 
@@ -478,7 +479,7 @@ function carregarVendasMobile() {
     
     lista.innerHTML = vendas.slice().reverse().map(v => `<div class="sale-card">
         <div class="product-img" style="width:40px;height:40px;font-size:1rem;"><i class="fas fa-shopping-bag"></i></div>
-        <div class="sale-info"><div class="sale-product">${v.nome}</div><div class="sale-detail">${v.data} · ${v.quantidade} un · ${v.codigo}</div></div>
+        <div class="sale-info"><div class="sale-product">${v.nome}</div><div class="sale-detail">${v.data} Â· ${v.quantidade} un Â· ${v.codigo}</div></div>
         <div class="sale-value"><div class="value">${formatarValor(v.total)}</div><div class="profit">+${formatarValor(v.lucro)}</div></div>
     </div>`).join('');
 }
