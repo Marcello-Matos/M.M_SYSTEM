@@ -634,7 +634,9 @@ function atualizarInfoVendaMobile() {
     const qtd = parseInt(document.getElementById('qtdVenda').value) || 0;
     if (!select.value) {
         document.getElementById('dispVenda').value = '-';
-        ['precoUnitVenda','totalVenda','lucroVenda'].forEach(id => document.getElementById(id).textContent = formatarValor(0));
+        document.getElementById('precoUnitVendaMobile').textContent = formatarValor(0);
+        document.getElementById('totalVendaMobile').textContent = formatarValor(0);
+        document.getElementById('lucroVendaMobile').textContent = formatarValor(0);
         return;
     }
     const opt = select.options[select.selectedIndex];
@@ -642,9 +644,9 @@ function atualizarInfoVendaMobile() {
     const cu = parseFloat(opt.dataset.custo);
     const disp = parseInt(opt.dataset.disp);
     document.getElementById('dispVenda').value = disp;
-    document.getElementById('precoUnitVenda').textContent = formatarValor(vu);
-    document.getElementById('totalVenda').textContent = formatarValor(vu*qtd);
-    document.getElementById('lucroVenda').textContent = formatarValor((vu-cu)*qtd);
+    document.getElementById('precoUnitVendaMobile').textContent = formatarValor(vu);
+    document.getElementById('totalVendaMobile').textContent = formatarValor(vu*qtd);
+    document.getElementById('lucroVendaMobile').textContent = formatarValor((vu-cu)*qtd);
 }
 
 function registrarVendaMobile(e) {
