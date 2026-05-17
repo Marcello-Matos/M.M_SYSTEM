@@ -1,4 +1,4 @@
-﻿// ==================== FIREBASE CONFIG ====================
+// ==================== FIREBASE CONFIG ====================
 // Configuracao sera carregada do firebase-config.js
 
 // ==================== UTILITARIOS ====================
