@@ -26,7 +26,7 @@ let db = null;
 let userId = null;
 
 // ==================== INICIALIZACAO FIREBASE ====================
-function inicializarFirebase() {
+async function inicializarFirebase() {
     // Verificar se Firebase esta disponivel
     if (typeof firebase === 'undefined') {
         console.log('Firebase nao disponivel, usando localStorage');
@@ -37,8 +37,11 @@ function inicializarFirebase() {
     try {
         db = firebase.firestore();
         
-        // Gerar ou recuperar ID unico do usuario/dispositivo
-        userId = localStorage.getItem('mm_user_id');
+        // Autenticar usuario anonimamente
+        const authUid = await autenticarUsuario();
+        
+        // Usar UID do Firebase como ID do usuario
+        userId = authUid || localStorage.getItem('mm_user_id');
         if (!userId) {
             userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('mm_user_id', userId);
@@ -47,7 +50,7 @@ function inicializarFirebase() {
         console.log('Firebase inicializado. UserID:', userId);
         
         // Carregar dados do Firestore
-        carregarDadosFirestore();
+        await carregarDadosFirestore();
         
         // Escutar mudancas em tempo real
         escutarMudancas();
@@ -859,3 +862,4 @@ document.addEventListener('DOMContentLoaded', function() {
     const vendaForm = document.getElementById('vendaForm');
     if (vendaForm) vendaForm.addEventListener('submit', registrarVendaDesktop);
 });
+
