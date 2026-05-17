@@ -864,3 +864,57 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+
+// ==================== SINCRONIZAR DADOS ====================
+async function sincronizarDados() {
+    if (!db) {
+        alert('Firebase nao disponivel. Verifique sua conexao.');
+        return;
+    }
+    
+    try {
+        // Pegar dados do localStorage
+        const produtosLocal = JSON.parse(localStorage.getItem('produtos') || '[]');
+        const vendasLocal = JSON.parse(localStorage.getItem('vendas') || '[]');
+        
+        if (produtosLocal.length === 0 && vendasLocal.length === 0) {
+            alert('Nenhum dado local para sincronizar.');
+            return;
+        }
+        
+        // Mesclar com dados do Firebase (evitar duplicatas)
+        const produtosExistentes = produtos.map(p => p.id);
+        const vendasExistentes = vendas.map(v => v.id);
+        
+        let novosProdutos = 0;
+        let novasVendas = 0;
+        
+        produtosLocal.forEach(p => {
+            if (!produtosExistentes.includes(p.id)) {
+                produtos.push(p);
+                novosProdutos++;
+            }
+        });
+        
+        vendasLocal.forEach(v => {
+            if (!vendasExistentes.includes(v.id)) {
+                vendas.push(v);
+                novasVendas++;
+            }
+        });
+        
+        // Salvar no Firebase
+        await salvarDadosFirestore();
+        
+        // Limpar localStorage
+        localStorage.removeItem('produtos');
+        localStorage.removeItem('vendas');
+        
+        alert('Sincronizado! ' + novosProdutos + ' produtos, ' + novasVendas + ' vendas enviados para a nuvem.');
+        atualizarTodasTelas();
+        
+    } catch (erro) {
+        console.error('Erro ao sincronizar:', erro);
+        alert('Erro ao sincronizar. Tente novamente.');
+    }
+}
