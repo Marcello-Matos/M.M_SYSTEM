@@ -91,8 +91,8 @@ body.login-active #mobile-version {
 }
 
 .login-logo-img {
-    max-width: 380px;
-    max-height: 140px;
+    max-width: 100%;
+    max-height: 80px;
     width: auto;
     height: auto;
     display: block;
@@ -231,8 +231,8 @@ body {
 }
 
 .header-logo-img {
-    max-width: 480px;
-    max-height: 160px;
+    max-width: min(420px, 60vw);
+    max-height: 120px;
     width: auto;
     height: auto;
     display: block;
