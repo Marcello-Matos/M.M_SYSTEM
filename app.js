@@ -863,3 +863,4 @@ document.addEventListener('DOMContentLoaded', function() {
     if (vendaForm) vendaForm.addEventListener('submit', registrarVendaDesktop);
 });
 
+
