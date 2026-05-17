@@ -75,14 +75,14 @@
                         </div>
                         <div class="form-group">
                             <label>Custo Unitario (R$)</label>
-                            <input type="number" id="custo" placeholder="0,00" step="0.01" min="0" required>
+                            <input type="number" id="custo" placeholder="0,00" step="0.01" min="0" value="0" required oninput="calcularValores()" onchange="calcularValores()" onblur="calcularValores()">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>Margem de Lucro (%)</label>
-                            <input type="number" id="porcentagem" placeholder="100" value="100" min="0">
+                            <input type="number" id="porcentagem" placeholder="100" value="100" min="0" oninput="calcularValores()" onchange="calcularValores()" onblur="calcularValores()">
                         </div>
                         <div class="form-group">
                             <label>Preco de Venda (R$)</label>
@@ -516,17 +516,17 @@
                         </div>
                         <div class="form-group">
                             <label>Custo (R$)</label>
-                            <input type="number" id="custoProduto" placeholder="0,00" step="0.01" min="0" required oninput="calcularPrecoVendaMobile()">
+                            <input type="number" id="custoProduto" placeholder="0,00" step="0.01" min="0" required onblur="calcularPrecoVendaMobile()">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Margem (%)</label>
-                            <input type="number" id="margemProduto" placeholder="100" value="100" min="0" oninput="calcularPrecoVendaMobile()">
+                            <input type="number" id="margemProduto" placeholder="100" value="100" min="0" onblur="calcularPrecoVendaMobile()">
                         </div>
                         <div class="form-group">
                             <label>Preco Venda (R$)</label>
-                            <input type="text" id="precoVenda" readonly>
+                            <input type="text" id="precoVendaProduto" readonly>
                         </div>
                     </div>
                     <button type="submit" class="btn-submit">
@@ -585,6 +585,42 @@
             </div>
         </div>
 
+        <!-- Modal: Sincronizar com Outro Dispositivo -->
+        <div class="modal" id="modal-sincronizar">
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h3>🔗 Sincronizar com Outro Dispositivo</h3>
+                    <button class="btn-close" onclick="fecharModal('modal-sincronizar')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form onsubmit="registrarSincronizacao(event)">
+                    <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Seu código de conta:</p>
+                        <h3 style="margin: 10px 0 0 0; color: #2c3e50;" id="meuCodigo">MM_XXXXX</h3>
+                        <button type="button" class="btn btn-secondary" onclick="copiarCodigoConta()" style="margin-top: 10px; width: 100%; font-size: 12px;">
+                            <i class="fas fa-copy"></i> Copiar Código
+                        </button>
+                    </div>
+
+                    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                    
+                    <p style="color: #666; font-size: 13px; text-align: center; margin-bottom: 15px;">
+                        OU conecte com código de outro dispositivo:
+                    </p>
+
+                    <div class="form-group">
+                        <label>Digite o código do outro dispositivo</label>
+                        <input type="text" id="inputCodigoSync" placeholder="MM_XXXXX" maxlength="8" required style="text-transform: uppercase;">
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-link"></i> Sincronizar
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <!-- Toast Notification -->
         <div class="toast" id="toast">
             <i class="fas fa-check-circle"></i>
@@ -594,7 +630,7 @@
     </div>
 </div>
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=889"></script>
 </body>
 </html>
 

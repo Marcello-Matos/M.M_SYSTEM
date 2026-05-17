@@ -1,26 +1,119 @@
+console.log('✓ app.js v7 carregado com sucesso!');
+
 // ==================== CONFIGURACAO ====================
 const PIN_PADRAO = '1234';
 
-function getUserId() {
-    let pin = localStorage.getItem('mm_pin');
-    if (!pin) {
-        pin = PIN_PADRAO;
-        localStorage.setItem('mm_pin', pin);
+function gerarAccountCode() {
+    // Gera código único: MM_XXXXX (5 caracteres aleatórios)
+    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let codigo = 'MM_';
+    for (let i = 0; i < 5; i++) {
+        codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
-    return 'user_pin_' + pin;
+    return codigo;
 }
 
-// ==================== FIREBASE ====================
-const firebaseConfig = {
-    apiKey: "AIzaSyB5yPH0GfQKN2KZIAaMct8JLFKliXdGeDY",
-    authDomain: "mmsysten.firebaseapp.com",
-    projectId: "mmsysten",
-    storageBucket: "mmsysten.firebasestorage.app",
-    messagingSenderId: "741827383663",
-    appId: "1:741827383663:web:984e0ccb601223160f189a"
-};
+function getUserId() {
+    // Tenta usar Account Code (sincronização entre dispositivos)
+    let accountCode = localStorage.getItem('mm_account_code');
+    
+    if (!accountCode) {
+        // Se não tem, gera um novo
+        accountCode = gerarAccountCode();
+        localStorage.setItem('mm_account_code', accountCode);
+    }
+    
+    return 'account_' + accountCode;
+}
 
-firebase.initializeApp(firebaseConfig);
+function getAccountCode() {
+    let accountCode = localStorage.getItem('mm_account_code');
+    if (!accountCode) {
+        accountCode = gerarAccountCode();
+        localStorage.setItem('mm_account_code', accountCode);
+    }
+    return accountCode;
+}
+
+async function sincronizarComCodigo(codigoDigitado) {
+    try {
+        codigoDigitado = codigoDigitado.toUpperCase().trim();
+        
+        // Validar formato do código
+        if (!codigoDigitado.match(/^MM_[A-Z0-9]{5}$/)) {
+            mostrarToast('❌ Código inválido! Formato: MM_XXXXX');
+            return false;
+        }
+        
+        // Não permitir sincronizar com o próprio código
+        if (codigoDigitado === getAccountCode()) {
+            mostrarToast('⚠️ Este é seu próprio código!');
+            return false;
+        }
+        
+        mostrarToast('⏳ Verificando código...');
+        
+        // Tentar carregar dados da conta fornecida
+        const novoUserId = 'account_' + codigoDigitado;
+        const doc = await db.collection('dados').doc(novoUserId).get();
+        
+        if (doc.exists) {
+            // Conta existe, vamos sincronizar
+            localStorage.setItem('mm_account_code', codigoDigitado);
+            mostrarToast('✅ Sincronizado! Atualizando...');
+            // Esperar um pouco e recarregar
+            setTimeout(() => location.reload(), 1000);
+            return true;
+        } else {
+            mostrarToast('❌ Conta não encontrada. Verifique o código!');
+            return false;
+        }
+    } catch (e) {
+        console.error('Erro ao sincronizar:', e);
+        mostrarToast('❌ Erro ao sincronizar. Tente novamente.');
+        return false;
+    }
+}
+
+function copiarCodigoConta() {
+    const codigo = getAccountCode();
+    navigator.clipboard.writeText(codigo).then(() => {
+        mostrarToast('✅ Código copiado: ' + codigo);
+    }).catch(() => {
+        alert('Seu código de conta é:\n\n' + codigo + '\n\nCompartilhe este código em seus outros dispositivos para sincronizar!');
+    });
+}
+
+function mostrarTelaSync() {
+    const codigo = getAccountCode();
+    alert(
+        '📱 SINCRONIZAR ENTRE DISPOSITIVOS\n\n' +
+        'Seu código de conta:\n\n' +
+        codigo + '\n\n' +
+        'Para sincronizar em OUTRO dispositivo:\n' +
+        '1. Abra esta aplicação no outro dispositivo\n' +
+        '2. Clique em "⚙️ Sincronizar"\n' +
+        '3. Digite este código: ' + codigo + '\n\n' +
+        'Todos os dados aparecerão automaticamente!'
+    );
+}
+
+function abrirModalSync() {
+    const codigo = getAccountCode();
+    document.getElementById('meuCodigo').textContent = codigo;
+    document.getElementById('inputCodigoSync').value = '';
+    abrirModal('modal-sincronizar');
+}
+
+function registrarSincronizacao(e) {
+    e.preventDefault();
+    const codigoDigitado = document.getElementById('inputCodigoSync').value.toUpperCase();
+    sincronizarComCodigo(codigoDigitado);
+}
+
+
+
+// ==================== FIREBASE ====================
 const db = firebase.firestore();
 const userId = getUserId();
 
@@ -74,6 +167,7 @@ async function init() {
         
     } catch (e) {
         console.error('Erro:', e);
+        mostrarToast('⚠️ Erro no Firebase. Usando dados locais.');
         // Fallback para localStorage
         produtos = JSON.parse(localStorage.getItem('produtos') || '[]');
         vendas = JSON.parse(localStorage.getItem('vendas') || '[]');
@@ -91,6 +185,7 @@ async function salvarDados() {
         console.log('Dados salvos');
     } catch (e) {
         console.error('Erro ao salvar:', e);
+        mostrarToast('⚠️ Erro ao salvar. Dados mantidos localmente.');
         localStorage.setItem('produtos', JSON.stringify(produtos));
         localStorage.setItem('vendas', JSON.stringify(vendas));
     }
@@ -113,20 +208,28 @@ function atualizarTodasTelas() {
 }
 
 // ==================== DESKTOP ====================
-function mostrarAba(aba) {
+function mostrarAba(aba, event) {
     document.querySelectorAll('.aba-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('aba-' + aba).classList.add('active');
-    event.target.classList.add('active');
+    const btn = document.querySelector(`.tab-btn[onclick*="${aba}"]`);
+    if (btn) btn.classList.add('active');
 }
 
 function calcularValores() {
-    const custo = parseFloat(document.getElementById('custo').value) || 0;
-    const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
-    if (custo > 0) {
-        const venda = custo + (custo * porcentagem / 100);
-        document.getElementById('venda').value = formatarValor(venda);
+    const custoEl = document.getElementById('custo');
+    const porcentagemEl = document.getElementById('porcentagem');
+    const vendaEl = document.getElementById('venda');
+    
+    if (!custoEl || !porcentagemEl || !vendaEl) {
+        return;
     }
+    
+    const custo = parseFloat(String(custoEl.value).replace(',', '.')) || 0;
+    const porcentagem = parseFloat(String(porcentagemEl.value).replace(',', '.')) || 0;
+    const valorVenda = custo + (custo * porcentagem / 100);
+    vendaEl.dataset.valor = valorVenda.toFixed(2);
+    vendaEl.value = formatarValor(valorVenda);
 }
 
 function adicionarProduto(e) {
@@ -134,6 +237,8 @@ function adicionarProduto(e) {
     const custo = parseFloat(document.getElementById('custo').value) || 0;
     const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
     const quantidade = parseInt(document.getElementById('quantidade').value) || 0;
+    const vendaEl = document.getElementById('venda');
+    const venda = parseFloat(vendaEl.dataset.valor || vendaEl.value) || 0;
     
     produtos.push({
         id: Date.now(),
@@ -143,7 +248,7 @@ function adicionarProduto(e) {
         quantidadeVendida: 0,
         custo: custo,
         porcentagem: porcentagem,
-        venda: custo + (custo * porcentagem / 100),
+        venda: venda,
         data: new Date().toLocaleDateString()
     });
     
@@ -176,9 +281,10 @@ function carregarEstoqueDesktop(filtro) {
     }).join('');
 }
 
-function filtrarEstoque(filtro) {
+function filtrarEstoque(filtro, event) {
     document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    const btn = document.querySelector(`.btn-filter[onclick*="${filtro}"]`);
+    if (btn) btn.classList.add('active');
     carregarEstoqueDesktop(filtro);
 }
 
@@ -320,7 +426,10 @@ function atualizarDashboard() {
 function calcularPrecoVendaMobile() {
     const custo = parseFloat(document.getElementById('custoProduto').value) || 0;
     const margem = parseFloat(document.getElementById('margemProduto').value) || 0;
-    document.getElementById('precoVenda').value = formatarValor(custo + (custo*margem/100));
+    const valorVenda = custo + (custo*margem/100);
+    const vendaEl = document.getElementById('precoVendaProduto');
+    vendaEl.dataset.valor = valorVenda.toFixed(2);
+    vendaEl.value = formatarValor(valorVenda);
 }
 
 function cadastrarProdutoMobile(e) {
@@ -329,6 +438,8 @@ function cadastrarProdutoMobile(e) {
     const qtd = parseInt(document.getElementById('qtdProduto').value) || 0;
     const custo = parseFloat(document.getElementById('custoProduto').value) || 0;
     const margem = parseFloat(document.getElementById('margemProduto').value) || 0;
+    const vendaEl = document.getElementById('precoVendaProduto');
+    const venda = parseFloat(vendaEl.dataset.valor || vendaEl.value) || 0;
     
     if (!nome || qtd <= 0 || custo <= 0) {
         mostrarToast('Preencha todos os campos');
@@ -338,7 +449,7 @@ function cadastrarProdutoMobile(e) {
     produtos.push({
         id: Date.now(), codigo: gerarCodigo(), nome, quantidade: qtd,
         quantidadeVendida: 0, custo, margem,
-        venda: custo + (custo*margem/100), data: new Date().toLocaleDateString()
+        venda: venda, data: new Date().toLocaleDateString()
     });
     
     salvarDados();
@@ -479,7 +590,7 @@ function carregarVendasMobile() {
     
     lista.innerHTML = vendas.slice().reverse().map(v => `<div class="sale-card">
         <div class="product-img" style="width:40px;height:40px;font-size:1rem;"><i class="fas fa-shopping-bag"></i></div>
-        <div class="sale-info"><div class="sale-product">${v.nome}</div><div class="sale-detail">${v.data} Â· ${v.quantidade} un Â· ${v.codigo}</div></div>
+        <div class="sale-info"><div class="sale-product">${v.nome}</div><div class="sale-detail">${v.data} · ${v.quantidade} un · ${v.codigo}</div></div>
         <div class="sale-value"><div class="value">${formatarValor(v.total)}</div><div class="profit">+${formatarValor(v.lucro)}</div></div>
     </div>`).join('');
 }
@@ -542,8 +653,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const custoInput = document.getElementById('custo');
     const porcentagemInput = document.getElementById('porcentagem');
-    if (custoInput) custoInput.addEventListener('input', calcularValores);
-    if (porcentagemInput) porcentagemInput.addEventListener('input', calcularValores);
+    [custoInput, porcentagemInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', calcularValores);
+            input.addEventListener('change', calcularValores);
+            input.addEventListener('blur', calcularValores);
+        }
+    });
+    calcularValores();
     
     const produtoForm = document.getElementById('produtoForm');
     if (produtoForm) produtoForm.addEventListener('submit', adicionarProduto);

@@ -1,1 +1,10 @@
-{"name":"controle-estoque-roupas","version":"1.0.0","description":"Sistema de controle de estoque de roupas","private":true}
+{
+  "name": "controle-estoque-roupas",
+  "version": "1.0.0",
+  "description": "Sistema de controle de estoque de roupas",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  }
+}
