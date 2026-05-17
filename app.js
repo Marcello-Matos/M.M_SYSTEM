@@ -1,25 +1,44 @@
+// ==================== SISTEMA DE PIN ====================
+const PIN_PADRAO = '1234';
+
+function getUserIdFromPin() {
+    let pin = localStorage.getItem('mm_pin');
+    if (!pin) {
+        pin = PIN_PADRAO;
+        localStorage.setItem('mm_pin', pin);
+    }
+    return 'user_pin_' + pin;
+}
+
+function alterarPin() {
+    const novoPin = prompt('Digite um PIN de 4 digitos:', '1234');
+    if (novoPin && novoPin.length >= 4) {
+        localStorage.setItem('mm_pin', novoPin);
+        localStorage.removeItem('mm_user_id');
+        alert('PIN alterado! Recarregue a pagina.');
+        location.reload();
+    }
+}
+
 // ==================== FIREBASE CONFIG ====================
 // Configuracao sera carregada do firebase-config.js
 
 // ==================== AUTENTICACAO ANONIMA ====================
 async function autenticarUsuario() {
     if (typeof firebase === 'undefined' || !firebase.auth) return null;
-    
     try {
         let user = firebase.auth().currentUser;
-        
         if (!user) {
             const credencial = await firebase.auth().signInAnonymously();
             user = credencial.user;
-            console.log('Login anonimo realizado:', user.uid);
         }
-        
         return user.uid;
     } catch (erro) {
         console.error('Erro na autenticacao:', erro);
         return null;
     }
 }
+
 // ==================== UTILITARIOS ====================
 function formatarValor(valor) {
     return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
@@ -46,32 +65,21 @@ let userId = null;
 
 // ==================== INICIALIZACAO FIREBASE ====================
 async function inicializarFirebase() {
-    // Verificar se Firebase esta disponivel
     if (typeof firebase === 'undefined') {
-        console.log('Firebase nao disponivel, usando localStorage');
+        console.log('Firebase nao disponivel');
         usarLocalStorage();
         return;
     }
     
     try {
         db = firebase.firestore();
+        await autenticarUsuario();
         
-        // Autenticar usuario anonimamente
-        const authUid = await autenticarUsuario();
-        
-        // Usar UID do Firebase como ID do usuario
-        userId = authUid || localStorage.getItem('mm_user_id');
-        if (!userId) {
-            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('mm_user_id', userId);
-        }
-        
+        // Usar PIN como ID do usuario
+        userId = getUserIdFromPin();
         console.log('Firebase inicializado. UserID:', userId);
         
-        // Carregar dados do Firestore
         await carregarDadosFirestore();
-        
-        // Escutar mudancas em tempo real
         escutarMudancas();
         
     } catch (erro) {
@@ -80,104 +88,114 @@ async function inicializarFirebase() {
     }
 }
 
-// ==================== FIRESTORE: CARREGAR DADOS ====================
+// ==================== FIRESTORE ====================
 async function carregarDadosFirestore() {
     if (!db) return;
-    
     try {
-        // Carregar produtos
-        const produtosDoc = await db.collection('dados').doc(userId).get();
-        if (produtosDoc.exists) {
-            const dados = produtosDoc.data();
+        const doc = await db.collection('dados').doc(userId).get();
+        if (doc.exists) {
+            const dados = doc.data();
             produtos = dados.produtos || [];
             vendas = dados.vendas || [];
-            console.log('Dados carregados do Firestore:', produtos.length, 'produtos,', vendas.length, 'vendas');
+            console.log('Dados carregados:', produtos.length, 'produtos');
         } else {
-            // Primeiro acesso - tentar migrar do localStorage
-            const produtosLocal = localStorage.getItem('produtos');
-            const vendasLocal = localStorage.getItem('vendas');
-            
-            if (produtosLocal || vendasLocal) {
-                produtos = JSON.parse(produtosLocal || '[]');
-                vendas = JSON.parse(vendasLocal || '[]');
+            // Migrar do localStorage
+            const p = JSON.parse(localStorage.getItem('produtos') || '[]');
+            const v = JSON.parse(localStorage.getItem('vendas') || '[]');
+            if (p.length || v.length) {
+                produtos = p;
+                vendas = v;
                 await salvarDadosFirestore();
-                console.log('Dados migrados do localStorage para Firestore');
+                console.log('Dados migrados');
             }
         }
-        
         atualizarTodasTelas();
-        
     } catch (erro) {
-        console.error('Erro ao carregar dados:', erro);
+        console.error('Erro:', erro);
         usarLocalStorage();
     }
 }
 
-// ==================== FIRESTORE: SALVAR DADOS ====================
 async function salvarDadosFirestore() {
     if (!db) {
-        // Fallback para localStorage
         localStorage.setItem('produtos', JSON.stringify(produtos));
         localStorage.setItem('vendas', JSON.stringify(vendas));
         return;
     }
-    
     try {
         await db.collection('dados').doc(userId).set({
             produtos: produtos,
             vendas: vendas,
-            ultimaAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+            ultimaAtualizacao: new Date().toISOString()
         });
         console.log('Dados salvos no Firestore');
     } catch (erro) {
         console.error('Erro ao salvar:', erro);
-        // Fallback para localStorage
         localStorage.setItem('produtos', JSON.stringify(produtos));
         localStorage.setItem('vendas', JSON.stringify(vendas));
     }
 }
 
-// ==================== FIRESTORE: ESCUTAR MUDANCAS ====================
 function escutarMudancas() {
     if (!db) return;
-    
     db.collection('dados').doc(userId).onSnapshot((doc) => {
         if (doc.exists) {
             const dados = doc.data();
-            const novosProdutos = dados.produtos || [];
-            const novasVendas = dados.vendas || [];
-            
-            // Verificar se houve mudancas
-            if (JSON.stringify(produtos) !== JSON.stringify(novosProdutos) ||
-                JSON.stringify(vendas) !== JSON.stringify(novasVendas)) {
-                
-                produtos = novosProdutos;
-                vendas = novasVendas;
+            if (JSON.stringify(produtos) !== JSON.stringify(dados.produtos || []) ||
+                JSON.stringify(vendas) !== JSON.stringify(dados.vendas || [])) {
+                produtos = dados.produtos || [];
+                vendas = dados.vendas || [];
                 console.log('Dados atualizados em tempo real');
                 atualizarTodasTelas();
             }
         }
-    }, (erro) => {
-        console.error('Erro ao escutar mudancas:', erro);
     });
 }
 
-// ==================== LOCALSTORAGE FALLBACK ====================
 function usarLocalStorage() {
-    console.log('Usando localStorage como fallback');
     db = null;
-    
-    const produtosLocal = localStorage.getItem('produtos');
-    const vendasLocal = localStorage.getItem('vendas');
-    
-    produtos = JSON.parse(produtosLocal || '[]');
-    vendas = JSON.parse(vendasLocal || '[]');
-    
+    produtos = JSON.parse(localStorage.getItem('produtos') || '[]');
+    vendas = JSON.parse(localStorage.getItem('vendas') || '[]');
     atualizarTodasTelas();
 }
 
-// ==================== ATUALIZAR TODAS AS TELAS ====================
+// ==================== SINCRONIZAR ====================
+async function sincronizarDados() {
+    if (!db) {
+        alert('Firebase nao disponivel');
+        return;
+    }
+    try {
+        const p = JSON.parse(localStorage.getItem('produtos') || '[]');
+        const v = JSON.parse(localStorage.getItem('vendas') || '[]');
+        
+        if (!p.length && !v.length) {
+            alert('Nenhum dado local para sincronizar');
+            return;
+        }
+        
+        const pExistentes = produtos.map(x => x.id);
+        const vExistentes = vendas.map(x => x.id);
+        
+        let np = 0, nv = 0;
+        p.forEach(x => { if (!pExistentes.includes(x.id)) { produtos.push(x); np++; } });
+        v.forEach(x => { if (!vExistentes.includes(x.id)) { vendas.push(x); nv++; } });
+        
+        await salvarDadosFirestore();
+        localStorage.removeItem('produtos');
+        localStorage.removeItem('vendas');
+        
+        alert('Sincronizado! ' + np + ' produtos, ' + nv + ' vendas');
+        atualizarTodasTelas();
+    } catch (e) {
+        console.error(e);
+        alert('Erro ao sincronizar');
+    }
+}
+
+// ==================== ATUALIZAR TELAS ====================
 function atualizarTodasTelas() {
+    const isMobile = window.innerWidth <= 768;
     if (isMobile) {
         atualizarDashboard();
         carregarEstoqueMobile();
@@ -191,41 +209,32 @@ function atualizarTodasTelas() {
     }
 }
 
-// ==================== DETECTAR VERSAO ====================
-const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-// ==================== DESKTOP: ABAS ====================
+// ==================== DESKTOP ====================
 function mostrarAba(aba) {
     document.querySelectorAll('.aba-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    
     document.getElementById('aba-' + aba).classList.add('active');
     event.target.classList.add('active');
-    
     if (aba === 'estoque') carregarEstoqueDesktop();
     if (aba === 'vendas') carregarVendasDesktop();
     if (aba === 'relatorio') atualizarRelatorioDesktop();
 }
 
-// ==================== DESKTOP: ESTOQUE ====================
 function calcularValores() {
     const custo = parseFloat(document.getElementById('custo').value) || 0;
     const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
-    if (custo > 0 && porcentagem >= 0) {
-        const venda = custo + (custo * porcentagem / 100);
-        document.getElementById('venda').value = formatarValor(venda);
+    if (custo > 0) {
+        document.getElementById('venda').value = formatarValor(custo + (custo * porcentagem / 100));
     }
 }
 
 function adicionarProduto(e) {
     e.preventDefault();
-    
     const custo = parseFloat(document.getElementById('custo').value) || 0;
     const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
-    const venda = custo + (custo * porcentagem / 100);
     const quantidade = parseInt(document.getElementById('quantidade').value) || 0;
     
-    const produto = {
+    produtos.push({
         id: Date.now(),
         codigo: gerarCodigo(),
         nome: document.getElementById('nome').value,
@@ -233,79 +242,50 @@ function adicionarProduto(e) {
         quantidadeVendida: 0,
         custo: custo,
         porcentagem: porcentagem,
-        venda: venda,
+        venda: custo + (custo * porcentagem / 100),
         data: new Date().toLocaleDateString()
-    };
+    });
     
-    produtos.push(produto);
     salvarDadosFirestore();
-    
-    alert('Produto cadastrado com sucesso!');
+    alert('Produto cadastrado!');
     limparFormulario();
     carregarEstoqueDesktop();
-    if (isMobile) atualizarDashboard();
 }
 
 function carregarEstoqueDesktop(filtro) {
     const tbody = document.getElementById('listaEstoque');
     if (!tbody) return;
     
-    let produtosFiltrados = produtos;
+    let filtrados = produtos;
+    if (filtro === 'disponivel') filtrados = produtos.filter(p => p.quantidade > p.quantidadeVendida);
+    else if (filtro === 'vendido') filtrados = produtos.filter(p => p.quantidadeVendida > 0);
     
-    if (filtro === 'disponivel') {
-        produtosFiltrados = produtos.filter(p => p.quantidade > p.quantidadeVendida);
-    } else if (filtro === 'vendido') {
-        produtosFiltrados = produtos.filter(p => p.quantidadeVendida > 0);
-    }
-    
-    if (produtosFiltrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">Nenhum produto encontrado</td></tr>';
+    if (!filtrados.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#999;">Nenhum produto</td></tr>';
         return;
     }
     
-    tbody.innerHTML = produtosFiltrados.map(p => {
-        const disponivel = p.quantidade - (p.quantidadeVendida || 0);
-        let status = 'Disponivel';
-        let statusClass = 'status-disponivel';
-        if (disponivel === 0) {
-            status = 'Vendido';
-            statusClass = 'status-vendido';
-        } else if (p.quantidadeVendida > 0) {
-            status = 'Parcial';
-            statusClass = 'status-parcial';
-        }
+    tbody.innerHTML = filtrados.map(p => {
+        const disp = p.quantidade - (p.quantidadeVendida || 0);
+        let status = 'Disponivel', cls = 'status-disponivel';
+        if (disp === 0) { status = 'Vendido'; cls = 'status-vendido'; }
+        else if (p.quantidadeVendida > 0) { status = 'Parcial'; cls = 'status-parcial'; }
         
-        return `
-            <tr>
-                <td><strong>${p.codigo}</strong></td>
-                <td>${p.nome}</td>
-                <td>${p.quantidade}</td>
-                <td>${p.quantidadeVendida || 0}</td>
-                <td>${formatarValor(p.custo)}</td>
-                <td>${formatarValor(p.venda)}</td>
-                <td><span class="status ${statusClass}">${status}</span></td>
-                <td>
-                    <button class="btn btn-danger" onclick="excluirProduto(${p.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
+        return `<tr><td><strong>${p.codigo}</strong></td><td>${p.nome}</td><td>${p.quantidade}</td><td>${p.quantidadeVendida||0}</td><td>${formatarValor(p.custo)}</td><td>${formatarValor(p.venda)}</td><td><span class="status ${cls}">${status}</span></td><td><button class="btn btn-danger" onclick="excluirProduto(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`;
     }).join('');
 }
 
 function filtrarEstoque(filtro) {
-    document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
     carregarEstoqueDesktop(filtro);
 }
 
 function excluirProduto(id) {
-    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    if (!confirm('Excluir produto?')) return;
     produtos = produtos.filter(p => p.id !== id);
     salvarDadosFirestore();
     carregarEstoqueDesktop();
-    if (isMobile) atualizarDashboard();
 }
 
 function limparFormulario() {
@@ -313,168 +293,100 @@ function limparFormulario() {
     document.getElementById('venda').value = '';
 }
 
-// ==================== DESKTOP: VENDAS ====================
 function carregarSelectProdutosDesktop() {
     const select = document.getElementById('produtoVenda');
     if (!select) return;
-    
     const disponiveis = produtos.filter(p => p.quantidade > (p.quantidadeVendida || 0));
-    
-    select.innerHTML = '<option value="">Escolha um produto disponivel</option>' +
-        disponiveis.map(p => `
-            <option value="${p.id}" data-custo="${p.custo}" data-venda="${p.venda}">
-                ${p.codigo} - ${p.nome} (Disp: ${p.quantidade - (p.quantidadeVendida || 0)})
-            </option>
-        `).join('');
+    select.innerHTML = '<option value="">Escolha um produto</option>' + disponiveis.map(p => `<option value="${p.id}" data-custo="${p.custo}" data-venda="${p.venda}">${p.codigo} - ${p.nome} (Disp: ${p.quantidade-(p.quantidadeVendida||0)})</option>`).join('');
 }
 
 function calcularVenda() {
     const select = document.getElementById('produtoVenda');
     const qtd = parseInt(document.getElementById('quantidadeVenda').value) || 0;
-    
     if (!select.value || qtd <= 0) return;
-    
-    const option = select.options[select.selectedIndex];
-    const vendaUnit = parseFloat(option.dataset.venda);
-    const custoUnit = parseFloat(option.dataset.custo);
-    
-    document.getElementById('precoVenda').value = formatarValor(vendaUnit);
-    document.getElementById('totalVenda').value = formatarValor(vendaUnit * qtd);
-    document.getElementById('lucroVenda').value = formatarValor(vendaUnit - custoUnit);
-    document.getElementById('lucroTotalVenda').value = formatarValor((vendaUnit - custoUnit) * qtd);
+    const opt = select.options[select.selectedIndex];
+    const vu = parseFloat(opt.dataset.venda);
+    const cu = parseFloat(opt.dataset.custo);
+    document.getElementById('precoVenda').value = formatarValor(vu);
+    document.getElementById('totalVenda').value = formatarValor(vu*qtd);
+    document.getElementById('lucroVenda').value = formatarValor(vu-cu);
+    document.getElementById('lucroTotalVenda').value = formatarValor((vu-cu)*qtd);
 }
 
 function registrarVendaDesktop(e) {
     e.preventDefault();
-    
     const produtoId = parseInt(document.getElementById('produtoVenda').value);
     const qtd = parseInt(document.getElementById('quantidadeVenda').value);
-    
-    if (!produtoId || !qtd) {
-        alert('Selecione um produto e quantidade!');
-        return;
-    }
+    if (!produtoId || !qtd) { alert('Preencha todos os campos'); return; }
     
     const produto = produtos.find(p => p.id === produtoId);
-    if (!produto) {
-        alert('Produto nao encontrado!');
-        return;
-    }
+    if (!produto) { alert('Produto nao encontrado'); return; }
     
-    const disponivel = produto.quantidade - (produto.quantidadeVendida || 0);
-    if (qtd > disponivel) {
-        alert(`Quantidade indisponivel! Tem apenas ${disponivel} unidades.`);
-        return;
-    }
+    const disp = produto.quantidade - (produto.quantidadeVendida || 0);
+    if (qtd > disp) { alert(`Apenas ${disp} disponiveis`); return; }
     
     produto.quantidadeVendida = (produto.quantidadeVendida || 0) + qtd;
+    vendas.push({
+        id: Date.now(), data: new Date().toLocaleDateString(),
+        produtoId: produto.id, codigo: produto.codigo, nome: produto.nome,
+        quantidade: qtd, vendaUnit: produto.venda,
+        total: produto.venda * qtd, lucro: (produto.venda - produto.custo) * qtd
+    });
     
-    const venda = {
-        id: Date.now(),
-        data: new Date().toLocaleDateString(),
-        produtoId: produto.id,
-        codigo: produto.codigo,
-        nome: produto.nome,
-        quantidade: qtd,
-        vendaUnit: produto.venda,
-        total: produto.venda * qtd,
-        lucro: (produto.venda - produto.custo) * qtd
-    };
-    
-    vendas.push(venda);
     salvarDadosFirestore();
-    
-    alert('Venda registrada com sucesso!');
+    alert('Venda registrada!');
     document.getElementById('vendaForm').reset();
-    document.getElementById('precoVenda').value = '';
-    document.getElementById('totalVenda').value = '';
-    document.getElementById('lucroVenda').value = '';
-    document.getElementById('lucroTotalVenda').value = '';
-    
+    ['precoVenda','totalVenda','lucroVenda','lucroTotalVenda'].forEach(id => document.getElementById(id).value = '');
     carregarVendasDesktop();
     carregarSelectProdutosDesktop();
-    if (isMobile) atualizarDashboard();
 }
 
 function carregarVendasDesktop() {
     const tbody = document.getElementById('listaVendas');
     if (!tbody) return;
-    
-    if (vendas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">Nenhuma venda registrada</td></tr>';
+    if (!vendas.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">Nenhuma venda</td></tr>';
         return;
     }
-    
-    tbody.innerHTML = vendas.slice().reverse().map(v => `
-        <tr>
-            <td>${v.data}</td>
-            <td><strong>${v.codigo}</strong></td>
-            <td>${v.nome}</td>
-            <td>${v.quantidade}</td>
-            <td>${formatarValor(v.vendaUnit)}</td>
-            <td>${formatarValor(v.total)}</td>
-            <td><strong style="color:#27ae60;">${formatarValor(v.lucro)}</strong></td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = vendas.slice().reverse().map(v => `<tr><td>${v.data}</td><td><strong>${v.codigo}</strong></td><td>${v.nome}</td><td>${v.quantidade}</td><td>${formatarValor(v.vendaUnit)}</td><td>${formatarValor(v.total)}</td><td><strong style="color:#27ae60;">${formatarValor(v.lucro)}</strong></td></tr>`).join('');
 }
 
-// ==================== DESKTOP: RELATORIO ====================
 function atualizarRelatorioDesktop() {
-    let totalInvestido = 0;
-    let totalVendido = 0;
-    let lucroReal = 0;
-    let valorEstoque = 0;
-    
+    let ti = 0, tv = 0, lr = 0, ve = 0;
     produtos.forEach(p => {
-        const qtdVendida = p.quantidadeVendida || 0;
-        const qtdEstoque = p.quantidade - qtdVendida;
-        
-        totalInvestido += p.custo * p.quantidade;
-        totalVendido += p.venda * qtdVendida;
-        lucroReal += (p.venda - p.custo) * qtdVendida;
-        valorEstoque += p.custo * qtdEstoque;
+        const qv = p.quantidadeVendida || 0;
+        const qe = p.quantidade - qv;
+        ti += p.custo * p.quantidade;
+        tv += p.venda * qv;
+        lr += (p.venda - p.custo) * qv;
+        ve += p.custo * qe;
     });
-    
-    const elInvestido = document.getElementById('totalInvestido');
-    const elVendido = document.getElementById('totalVendido');
-    const elLucro = document.getElementById('totalLucro');
-    const elEstoque = document.getElementById('totalEstoque');
-    
-    if (elInvestido) elInvestido.textContent = formatarValor(totalInvestido);
-    if (elVendido) elVendido.textContent = formatarValor(totalVendido);
-    if (elLucro) elLucro.textContent = formatarValor(lucroReal);
-    if (elEstoque) elEstoque.textContent = formatarValor(valorEstoque);
+    const els = ['totalInvestido','totalVendido','totalLucro','totalEstoque'];
+    const vals = [ti,tv,lr,ve];
+    els.forEach((id,i) => { const el = document.getElementById(id); if(el) el.textContent = formatarValor(vals[i]); });
 }
 
-// ==================== MOBILE: NAVEGACAO ====================
+// ==================== MOBILE ====================
 function mostrarTela(tela) {
     document.querySelectorAll('.tela').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    
     const telaEl = document.getElementById('tela-' + tela);
     if (telaEl) telaEl.classList.add('active');
-    
     const navItem = document.querySelector(`.nav-item[data-tela="${tela}"]`);
     if (navItem) navItem.classList.add('active');
-    
     if (tela === 'dashboard') atualizarDashboard();
     if (tela === 'estoque') carregarEstoqueMobile();
     if (tela === 'vendas') carregarVendasMobile();
     if (tela === 'relatorio') atualizarRelatorioMobile();
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ==================== MOBILE: MODAL ====================
 function abrirModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        
-        if (modalId === 'modal-vender') {
-            carregarSelectProdutosMobile();
-        }
+        if (modalId === 'modal-vender') carregarSelectProdutosMobile();
     }
 }
 
@@ -489,145 +401,80 @@ function fecharModal(modalId) {
 }
 
 window.onclick = function(e) {
-    if (e.target.classList.contains('modal')) {
-        fecharModal(e.target.id);
-    }
+    if (e.target.classList.contains('modal')) fecharModal(e.target.id);
 };
 
-// ==================== MOBILE: DASHBOARD ====================
 function atualizarDashboard() {
-    const totalProdutos = produtos.length;
+    const tp = produtos.length;
     const hoje = new Date().toLocaleDateString();
-    const vendasHoje = vendas.filter(v => v.data === hoje).reduce((sum, v) => sum + v.quantidade, 0);
+    const vh = vendas.filter(v => v.data === hoje).reduce((s,v) => s+v.quantidade, 0);
+    let lt = 0, inv = 0;
+    produtos.forEach(p => { const qv = p.quantidadeVendida||0; inv += p.custo*p.quantidade; lt += (p.venda-p.custo)*qv; });
     
-    let lucroTotal = 0;
-    let investido = 0;
-    
-    produtos.forEach(p => {
-        const qtdVendida = p.quantidadeVendida || 0;
-        investido += p.custo * p.quantidade;
-        lucroTotal += (p.venda - p.custo) * qtdVendida;
-    });
-    
-    const elProdutos = document.getElementById('dashTotalProdutos');
-    const elVendas = document.getElementById('dashTotalVendas');
-    const elLucro = document.getElementById('dashLucroTotal');
-    const elInvestido = document.getElementById('dashInvestido');
-    
-    if (elProdutos) elProdutos.textContent = totalProdutos;
-    if (elVendas) elVendas.textContent = vendasHoje;
-    if (elLucro) elLucro.textContent = formatarValor(lucroTotal);
-    if (elInvestido) elInvestido.textContent = formatarValor(investido);
+    const ids = ['dashTotalProdutos','dashTotalVendas','dashLucroTotal','dashInvestido'];
+    const vals = [tp,vh,formatarValor(lt),formatarValor(inv)];
+    ids.forEach((id,i) => { const el = document.getElementById(id); if(el) el.textContent = vals[i]; });
 }
 
-// ==================== MOBILE: CADASTRAR ====================
 function calcularPrecoVendaMobile() {
     const custo = parseFloat(document.getElementById('custoProduto').value) || 0;
     const margem = parseFloat(document.getElementById('margemProduto').value) || 0;
-    const preco = custo + (custo * margem / 100);
-    document.getElementById('precoVenda').value = formatarValor(preco);
+    document.getElementById('precoVenda').value = formatarValor(custo + (custo*margem/100));
 }
 
 function cadastrarProdutoMobile(e) {
     e.preventDefault();
-    
     const nome = document.getElementById('nomeProduto').value.trim();
-    const quantidade = parseInt(document.getElementById('qtdProduto').value) || 0;
+    const qtd = parseInt(document.getElementById('qtdProduto').value) || 0;
     const custo = parseFloat(document.getElementById('custoProduto').value) || 0;
     const margem = parseFloat(document.getElementById('margemProduto').value) || 0;
-    const venda = custo + (custo * margem / 100);
     
-    if (!nome || quantidade <= 0 || custo <= 0) {
-        mostrarToast('Preencha todos os campos corretamente!');
+    if (!nome || qtd <= 0 || custo <= 0) {
+        mostrarToast('Preencha todos os campos');
         return;
     }
     
-    const produto = {
-        id: Date.now(),
-        codigo: gerarCodigo(),
-        nome,
-        quantidade,
-        quantidadeVendida: 0,
-        custo,
-        margem,
-        venda,
-        data: new Date().toLocaleDateString()
-    };
+    produtos.push({
+        id: Date.now(), codigo: gerarCodigo(), nome, quantidade: qtd,
+        quantidadeVendida: 0, custo, margem,
+        venda: custo + (custo*margem/100), data: new Date().toLocaleDateString()
+    });
     
-    produtos.push(produto);
     salvarDadosFirestore();
-    
     fecharModal('modal-cadastrar');
-    mostrarToast('Produto cadastrado com sucesso!');
+    mostrarToast('Produto cadastrado!');
     atualizarDashboard();
     carregarEstoqueMobile();
 }
 
-// ==================== MOBILE: ESTOQUE ====================
-let filtroAtual = 'todos';
-let buscaAtual = '';
+let filtroAtual = 'todos', buscaAtual = '';
 
 function carregarEstoqueMobile() {
     const lista = document.getElementById('listaEstoqueMobile');
     if (!lista) return;
     
-    let filtrados = produtos;
+    let f = produtos;
+    if (buscaAtual) f = f.filter(p => p.nome.toLowerCase().includes(buscaAtual.toLowerCase()) || p.codigo.toLowerCase().includes(buscaAtual.toLowerCase()));
+    if (filtroAtual === 'disponivel') f = f.filter(p => p.quantidade > (p.quantidadeVendida||0));
+    else if (filtroAtual === 'vendido') f = f.filter(p => (p.quantidadeVendida||0) > 0);
     
-    if (buscaAtual) {
-        filtrados = filtrados.filter(p => 
-            p.nome.toLowerCase().includes(buscaAtual.toLowerCase()) ||
-            p.codigo.toLowerCase().includes(buscaAtual.toLowerCase())
-        );
-    }
-    
-    if (filtroAtual === 'disponivel') {
-        filtrados = filtrados.filter(p => p.quantidade > (p.quantidadeVendida || 0));
-    } else if (filtroAtual === 'vendido') {
-        filtrados = filtrados.filter(p => (p.quantidadeVendida || 0) > 0);
-    }
-    
-    if (filtrados.length === 0) {
-        lista.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-box-open"></i>
-                <p>Nenhum produto encontrado</p>
-            </div>
-        `;
+    if (!f.length) {
+        lista.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Nenhum produto</p></div>';
         return;
     }
     
-    lista.innerHTML = filtrados.map(p => {
-        const disponivel = p.quantidade - (p.quantidadeVendida || 0);
-        const percentual = Math.round((disponivel / p.quantidade) * 100);
+    lista.innerHTML = f.map(p => {
+        const disp = p.quantidade - (p.quantidadeVendida||0);
+        const pct = Math.round((disp/p.quantidade)*100);
+        let st = 'disponivel', txt = 'Disponivel';
+        if (disp===0) { st='vendido'; txt='Vendido'; }
+        else if (p.quantidadeVendida>0) { st='parcial'; txt=pct+'%'; }
         
-        let status = 'disponivel';
-        let statusText = 'Disponivel';
-        if (disponivel === 0) {
-            status = 'vendido';
-            statusText = 'Vendido';
-        } else if (p.quantidadeVendida > 0) {
-            status = 'parcial';
-            statusText = `${percentual}%`;
-        }
-        
-        return `
-            <div class="product-card" onclick="verDetalhesProduto(${p.id})">
-                <div class="product-img">
-                    <i class="fas fa-tshirt"></i>
-                </div>
-                <div class="product-info">
-                    <div class="product-name">${p.nome}</div>
-                    <div class="product-meta">
-                        <span class="status-badge status-${status}">${statusText}</span>
-                        <span>${p.codigo}</span>
-                    </div>
-                </div>
-                <div class="product-price">
-                    <div class="price">${formatarValor(p.venda)}</div>
-                    <div class="stock">${disponivel}/${p.quantidade} disp.</div>
-                </div>
-            </div>
-        `;
+        return `<div class="product-card" onclick="verDetalhesProduto(${p.id})">
+            <div class="product-img"><i class="fas fa-tshirt"></i></div>
+            <div class="product-info"><div class="product-name">${p.nome}</div><div class="product-meta"><span class="status-badge status-${st}">${txt}</span><span>${p.codigo}</span></div></div>
+            <div class="product-price"><div class="price">${formatarValor(p.venda)}</div><div class="stock">${disp}/${p.quantidade} disp.</div></div>
+        </div>`;
     }).join('');
 }
 
@@ -644,101 +491,69 @@ function filtrarStatusMobile(status, btn) {
 }
 
 function verDetalhesProduto(id) {
-    const p = produtos.find(prod => prod.id === id);
+    const p = produtos.find(x => x.id === id);
     if (!p) return;
-    
-    const disponivel = p.quantidade - (p.quantidadeVendida || 0);
-    
-    if (confirm(`${p.nome}\nCodigo: ${p.codigo}\nQuantidade: ${p.quantidade}\nVendido: ${p.quantidadeVendida || 0}\nDisponivel: ${disponivel}\nCusto: ${formatarValor(p.custo)}\nVenda: ${formatarValor(p.venda)}\n\nDeseja excluir este produto?`)) {
-        produtos = produtos.filter(prod => prod.id !== id);
+    const disp = p.quantidade - (p.quantidadeVendida||0);
+    if (confirm(`${p.nome}\nCodigo: ${p.codigo}\nQtd: ${p.quantidade}\nVendido: ${p.quantidadeVendida||0}\nDisp: ${disp}\nCusto: ${formatarValor(p.custo)}\nVenda: ${formatarValor(p.venda)}\n\nExcluir?`)) {
+        produtos = produtos.filter(x => x.id !== id);
         salvarDadosFirestore();
-        mostrarToast('Produto excluido!');
+        mostrarToast('Excluido!');
         carregarEstoqueMobile();
         atualizarDashboard();
     }
 }
 
-// ==================== MOBILE: VENDAS ====================
 function carregarSelectProdutosMobile() {
     const select = document.getElementById('selectProduto');
     if (!select) return;
-    
-    const disponiveis = produtos.filter(p => p.quantidade > (p.quantidadeVendida || 0));
-    
-    select.innerHTML = '<option value="">Selecione um produto</option>' +
-        disponiveis.map(p => {
-            const disp = p.quantidade - (p.quantidadeVendida || 0);
-            return `<option value="${p.id}" data-custo="${p.custo}" data-venda="${p.venda}" data-disp="${disp}">
-                ${p.nome} (${disp} disp.)
-            </option>`;
-        }).join('');
+    const disp = produtos.filter(p => p.quantidade > (p.quantidadeVendida||0));
+    select.innerHTML = '<option value="">Selecione</option>' + disp.map(p => {
+        const d = p.quantidade - (p.quantidadeVendida||0);
+        return `<option value="${p.id}" data-custo="${p.custo}" data-venda="${p.venda}" data-disp="${d}">${p.nome} (${d} disp.)</option>`;
+    }).join('');
 }
 
 function atualizarInfoVendaMobile() {
     const select = document.getElementById('selectProduto');
     const qtd = parseInt(document.getElementById('qtdVenda').value) || 0;
-    
     if (!select.value) {
         document.getElementById('dispVenda').value = '-';
-        document.getElementById('precoUnitVenda').textContent = formatarValor(0);
-        document.getElementById('totalVenda').textContent = formatarValor(0);
-        document.getElementById('lucroVenda').textContent = formatarValor(0);
+        ['precoUnitVenda','totalVenda','lucroVenda'].forEach(id => document.getElementById(id).textContent = formatarValor(0));
         return;
     }
-    
-    const option = select.options[select.selectedIndex];
-    const vendaUnit = parseFloat(option.dataset.venda);
-    const custoUnit = parseFloat(option.dataset.custo);
-    const disp = parseInt(option.dataset.disp);
-    
+    const opt = select.options[select.selectedIndex];
+    const vu = parseFloat(opt.dataset.venda);
+    const cu = parseFloat(opt.dataset.custo);
+    const disp = parseInt(opt.dataset.disp);
     document.getElementById('dispVenda').value = disp;
-    document.getElementById('precoUnitVenda').textContent = formatarValor(vendaUnit);
-    document.getElementById('totalVenda').textContent = formatarValor(vendaUnit * qtd);
-    document.getElementById('lucroVenda').textContent = formatarValor((vendaUnit - custoUnit) * qtd);
+    document.getElementById('precoUnitVenda').textContent = formatarValor(vu);
+    document.getElementById('totalVenda').textContent = formatarValor(vu*qtd);
+    document.getElementById('lucroVenda').textContent = formatarValor((vu-cu)*qtd);
 }
 
 function registrarVendaMobile(e) {
     e.preventDefault();
-    
-    const produtoId = parseInt(document.getElementById('selectProduto').value);
+    const pid = parseInt(document.getElementById('selectProduto').value);
     const qtd = parseInt(document.getElementById('qtdVenda').value);
+    if (!pid || !qtd) { mostrarToast('Preencha todos os campos'); return; }
     
-    if (!produtoId || !qtd) {
-        mostrarToast('Selecione um produto e quantidade!');
-        return;
-    }
+    const p = produtos.find(x => x.id === pid);
+    if (!p) { mostrarToast('Produto nao encontrado'); return; }
     
-    const produto = produtos.find(p => p.id === produtoId);
-    if (!produto) {
-        mostrarToast('Produto nao encontrado!');
-        return;
-    }
+    const disp = p.quantidade - (p.quantidadeVendida||0);
+    if (qtd > disp) { mostrarToast(`Apenas ${disp} disponiveis`); return; }
     
-    const disponivel = produto.quantidade - (produto.quantidadeVendida || 0);
-    if (qtd > disponivel) {
-        mostrarToast(`Apenas ${disponivel} unidades disponiveis!`);
-        return;
-    }
+    p.quantidadeVendida = (p.quantidadeVendida||0) + qtd;
+    vendas.push({
+        id: Date.now(), data: new Date().toLocaleDateString(),
+        produtoId: p.id, codigo: p.codigo, nome: p.nome,
+        quantidade: qtd, vendaUnit: p.venda,
+        total: p.venda*qtd, lucro: (p.venda-p.custo)*qtd
+    });
     
-    produto.quantidadeVendida = (produto.quantidadeVendida || 0) + qtd;
-    
-    const venda = {
-        id: Date.now(),
-        data: new Date().toLocaleDateString(),
-        produtoId: produto.id,
-        codigo: produto.codigo,
-        nome: produto.nome,
-        quantidade: qtd,
-        vendaUnit: produto.venda,
-        total: produto.venda * qtd,
-        lucro: (produto.venda - produto.custo) * qtd
-    };
-    
-    vendas.push(venda);
     salvarDadosFirestore();
-    
     fecharModal('modal-vender');
-    mostrarToast('Venda registrada com sucesso!');
+    mostrarToast('Venda registrada!');
     atualizarDashboard();
     carregarVendasMobile();
     carregarEstoqueMobile();
@@ -748,81 +563,46 @@ function carregarVendasMobile() {
     const lista = document.getElementById('listaVendasMobile');
     if (!lista) return;
     
-    let totalVendido = 0;
-    let totalLucro = 0;
-    
-    vendas.forEach(v => {
-        totalVendido += v.total;
-        totalLucro += v.lucro;
-    });
+    let tv = 0, tl = 0;
+    vendas.forEach(v => { tv += v.total; tl += v.lucro; });
     
     const elTotal = document.getElementById('vendasTotal');
     const elLucro = document.getElementById('vendasLucro');
-    if (elTotal) elTotal.textContent = formatarValor(totalVendido);
-    if (elLucro) elLucro.textContent = formatarValor(totalLucro);
+    if (elTotal) elTotal.textContent = formatarValor(tv);
+    if (elLucro) elLucro.textContent = formatarValor(tl);
     
-    if (vendas.length === 0) {
-        lista.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-shopping-bag"></i>
-                <p>Nenhuma venda registrada</p>
-            </div>
-        `;
+    if (!vendas.length) {
+        lista.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-bag"></i><p>Nenhuma venda</p></div>';
         return;
     }
     
-    lista.innerHTML = vendas.slice().reverse().map(v => `
-        <div class="sale-card">
-            <div class="product-img" style="width:40px;height:40px;font-size:1rem;">
-                <i class="fas fa-shopping-bag"></i>
-            </div>
-            <div class="sale-info">
-                <div class="sale-product">${v.nome}</div>
-                <div class="sale-detail">${v.data} Ã‚Â· ${v.quantidade} un Ã‚Â· ${v.codigo}</div>
-            </div>
-            <div class="sale-value">
-                <div class="value">${formatarValor(v.total)}</div>
-                <div class="profit">+${formatarValor(v.lucro)}</div>
-            </div>
-        </div>
-    `).join('');
+    lista.innerHTML = vendas.slice().reverse().map(v => `<div class="sale-card">
+        <div class="product-img" style="width:40px;height:40px;font-size:1rem;"><i class="fas fa-shopping-bag"></i></div>
+        <div class="sale-info"><div class="sale-product">${v.nome}</div><div class="sale-detail">${v.data} · ${v.quantidade} un · ${v.codigo}</div></div>
+        <div class="sale-value"><div class="value">${formatarValor(v.total)}</div><div class="profit">+${formatarValor(v.lucro)}</div></div>
+    </div>`).join('');
 }
 
-// ==================== MOBILE: RELATORIO ====================
 function atualizarRelatorioMobile() {
-    let totalInvestido = 0;
-    let totalVendido = 0;
-    let lucroReal = 0;
-    let valorEstoque = 0;
-    
+    let ti = 0, tv = 0, lr = 0, ve = 0;
     produtos.forEach(p => {
-        const qtdVendida = p.quantidadeVendida || 0;
-        const qtdEstoque = p.quantidade - qtdVendida;
-        
-        totalInvestido += p.custo * p.quantidade;
-        totalVendido += p.venda * qtdVendida;
-        lucroReal += (p.venda - p.custo) * qtdVendida;
-        valorEstoque += p.custo * qtdEstoque;
+        const qv = p.quantidadeVendida||0;
+        const qe = p.quantidade - qv;
+        ti += p.custo * p.quantidade;
+        tv += p.venda * qv;
+        lr += (p.venda - p.custo) * qv;
+        ve += p.custo * qe;
     });
     
-    const elInvestido = document.getElementById('relInvestido');
-    const elVendido = document.getElementById('relVendido');
-    const elLucro = document.getElementById('relLucro');
-    const elEstoque = document.getElementById('relEstoque');
+    const ids = ['relInvestido','relVendido','relLucro','relEstoque'];
+    const vals = [ti,tv,lr,ve];
+    ids.forEach((id,i) => { const el = document.getElementById(id); if(el) el.textContent = formatarValor(vals[i]); });
     
-    if (elInvestido) elInvestido.textContent = formatarValor(totalInvestido);
-    if (elVendido) elVendido.textContent = formatarValor(totalVendido);
-    if (elLucro) elLucro.textContent = formatarValor(lucroReal);
-    if (elEstoque) elEstoque.textContent = formatarValor(valorEstoque);
-    
-    const roi = totalInvestido > 0 ? Math.min((totalVendido / totalInvestido) * 100, 100) : 0;
-    const progressFill = document.getElementById('progressROI');
-    const textROI = document.getElementById('textROI');
-    
-    if (progressFill) {
-        setTimeout(() => progressFill.style.width = roi + '%', 100);
-    }
-    if (textROI) textROI.textContent = roi.toFixed(1) + '% do investimento retornado';
+    const roi = ti > 0 ? Math.min((tv/ti)*100, 100) : 0;
+    const pf = document.getElementById('progressROI');
+    const tr = document.getElementById('textROI');
+    if (pf) setTimeout(() => pf.style.width = roi+'%', 100);
+    if (tr) tr.textContent = roi.toFixed(1)+'% do investimento retornado';
 }
 
 // ==================== TEMA ====================
@@ -844,10 +624,8 @@ function toggleTheme() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar Firebase primeiro
     inicializarFirebase();
     
-    // Carregar tema
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
@@ -855,16 +633,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (icon) icon.className = 'fas fa-sun';
     }
     
-    // Data atual mobile
     const dateEl = document.getElementById('currentDate');
     if (dateEl) {
-        const hoje = new Date().toLocaleDateString('pt-BR', { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-        });
+        const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         dateEl.textContent = hoje.charAt(0).toUpperCase() + hoje.slice(1);
     }
     
-    // Desktop event listeners
     const custoInput = document.getElementById('custo');
     const porcentagemInput = document.getElementById('porcentagem');
     if (custoInput) custoInput.addEventListener('input', calcularValores);
@@ -881,59 +655,3 @@ document.addEventListener('DOMContentLoaded', function() {
     const vendaForm = document.getElementById('vendaForm');
     if (vendaForm) vendaForm.addEventListener('submit', registrarVendaDesktop);
 });
-
-
-
-// ==================== SINCRONIZAR DADOS ====================
-async function sincronizarDados() {
-    if (!db) {
-        alert('Firebase nao disponivel. Verifique sua conexao.');
-        return;
-    }
-    
-    try {
-        // Pegar dados do localStorage
-        const produtosLocal = JSON.parse(localStorage.getItem('produtos') || '[]');
-        const vendasLocal = JSON.parse(localStorage.getItem('vendas') || '[]');
-        
-        if (produtosLocal.length === 0 && vendasLocal.length === 0) {
-            alert('Nenhum dado local para sincronizar.');
-            return;
-        }
-        
-        // Mesclar com dados do Firebase (evitar duplicatas)
-        const produtosExistentes = produtos.map(p => p.id);
-        const vendasExistentes = vendas.map(v => v.id);
-        
-        let novosProdutos = 0;
-        let novasVendas = 0;
-        
-        produtosLocal.forEach(p => {
-            if (!produtosExistentes.includes(p.id)) {
-                produtos.push(p);
-                novosProdutos++;
-            }
-        });
-        
-        vendasLocal.forEach(v => {
-            if (!vendasExistentes.includes(v.id)) {
-                vendas.push(v);
-                novasVendas++;
-            }
-        });
-        
-        // Salvar no Firebase
-        await salvarDadosFirestore();
-        
-        // Limpar localStorage
-        localStorage.removeItem('produtos');
-        localStorage.removeItem('vendas');
-        
-        alert('Sincronizado! ' + novosProdutos + ' produtos, ' + novasVendas + ' vendas enviados para a nuvem.');
-        atualizarTodasTelas();
-        
-    } catch (erro) {
-        console.error('Erro ao sincronizar:', erro);
-        alert('Erro ao sincronizar. Tente novamente.');
-    }
-}
