@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Teste Firebase</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <h1>Teste de Sincronizacao</h1>
+    <div id="status">Carregando...</div>
+    <div id="dados"></div>
+    <br>
+    <input type="text" id="nomeProduto" placeholder="Nome do produto">
+    <input type="number" id="qtdProduto" placeholder="Quantidade" value="1">
+    <button onclick="adicionarProduto()">Adicionar Produto</button>
+    <br><br>
+    <button onclick="limparDados()">Limpar Todos os Dados</button>
+    
+    <script>
+        // Configuracao Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5yPH0GfQKN2KZIAaMct8JLFKliXdGeDY",
+            authDomain: "mmsysten.firebaseapp.com",
+            projectId: "mmsysten",
+            storageBucket: "mmsysten.firebasestorage.app",
+            messagingSenderId: "741827383663",
+            appId: "1:741827383663:web:984e0ccb601223160f189a"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const PIN = '1234';
+        const userId = 'user_pin_' + PIN;
+        let produtos = [];
+        
+        // Autenticar
+        async function init() {
+            try {
+                await firebase.auth().signInAnonymously();
+                console.log('Autenticado');
+                carregarDados();
+            } catch(e) {
+                console.error('Erro auth:', e);
+                document.getElementById('status').textContent = 'Erro: ' + e.message;
+            }
+        }
+        
+        // Carregar dados
+        function carregarDados() {
+            db.collection('dados').doc(userId).onSnapshot((doc) => {
+                if (doc.exists) {
+                    const dados = doc.data();
+                    produtos = dados.produtos || [];
+                    mostrarDados();
+                    document.getElementById('status').textContent = 'Sincronizado! ' + produtos.length + ' produtos';
+                } else {
+                    document.getElementById('status').textContent = 'Nenhum dado. Adicione um produto!';
+                }
+            }, (erro) => {
+                document.getElementById('status').textContent = 'Erro: ' + erro.message;
+            });
+        }
+        
+        // Mostrar dados
+        function mostrarDados() {
+            const div = document.getElementById('dados');
+            if (!produtos.length) {
+                div.innerHTML = '<p>Nenhum produto</p>';
+                return;
+            }
+            div.innerHTML = '<h3>Produtos:</h3>' + produtos.map(p => 
+                `<div>${p.nome} - Qtd: ${p.quantidade} - Cod: ${p.codigo}</div>`
+            ).join('');
+        }
+        
+        // Adicionar produto
+        async function adicionarProduto() {
+            const nome = document.getElementById('nomeProduto').value;
+            const qtd = parseInt(document.getElementById('qtdProduto').value);
+            if (!nome) return alert('Digite um nome');
+            
+            produtos.push({
+                id: Date.now(),
+                codigo: 'RP' + Math.floor(Math.random()*9000+1000),
+                nome: nome,
+                quantidade: qtd,
+                quantidadeVendida: 0,
+                custo: 10,
+                venda: 20,
+                data: new Date().toLocaleDateString()
+            });
+            
+            await db.collection('dados').doc(userId).set({
+                produtos: produtos,
+                vendas: [],
+                ultimaAtualizacao: new Date().toISOString()
+            });
+            
+            document.getElementById('nomeProduto').value = '';
+            alert('Adicionado!');
+        }
+        
+        // Limpar dados
+        async function limparDados() {
+            if (!confirm('Limpar todos os dados?')) return;
+            await db.collection('dados').doc(userId).delete();
+            produtos = [];
+            alert('Dados limpos!');
+        }
+        
+        // Iniciar
+        init();
+    </script>
+</body>
+</html>
