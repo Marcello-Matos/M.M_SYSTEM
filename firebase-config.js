@@ -10,4 +10,4 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// db sera declarado no app.js
