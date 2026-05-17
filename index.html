@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -15,6 +15,41 @@
     <script src="firebase-config.js"></script>
 </head>
 <body>
+
+<div id="login-screen" class="login-screen">
+    <div class="login-card">
+        <div class="login-hero">
+            <div class="login-logo">
+                <i class="fas fa-tshirt"></i>
+                <span>M.M SYSTEM</span>
+            </div>
+            <div class="login-welcome">
+                <h1>Olá,<br>bem-vindo!</h1>
+                <p>Acesse seu controle de estoque e vendas com segurança.</p>
+            </div>
+        </div>
+        <div class="login-panel">
+            <form id="loginForm" class="login-form">
+                <h2>Entrar</h2>
+                <p>Informe seu usuário e senha</p>
+                <div class="login-input">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="loginUsuario" placeholder="Login" autocomplete="username" required>
+                </div>
+                <div class="login-input">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password" required>
+                </div>
+                <label class="login-remember">
+                    <input type="checkbox" id="lembrarLogin">
+                    <span>Lembrar acesso</span>
+                </label>
+                <button type="submit" class="login-button">Login</button>
+                <div id="loginErro" class="login-error"></div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- DETECCAO DE DISPOSITIVO -->
 <script>
@@ -31,9 +66,12 @@
 <!-- ============================================ -->
 <!-- VERSAO DESKTOP (apenas para computador)      -->
 <!-- ============================================ -->
-<div id="desktop-version">
+<div id="desktop-version" class="app-locked">
     <div class="container">
         <header class="header">
+            <button class="logout-btn" onclick="logoutSistema()">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
             <h1><i class="fas fa-tshirt"></i> Controle de Estoque e Vendas</h1>
             <p>Gerencie suas compras e vendas</p>
         </header>
@@ -247,7 +285,7 @@
 <!-- ============================================ -->
 <!-- VERSAO MOBILE (apenas para celular)          -->
 <!-- ============================================ -->
-<div id="mobile-version">
+<div id="mobile-version" class="app-locked">
     <div id="app">
         
         <!-- Header -->
@@ -262,8 +300,8 @@
                         <span>Controle de Estoque</span>
                     </div>
                 </div>
-                <button class="btn-icon" onclick="toggleTheme()">
-                    <i class="fas fa-moon" id="themeIcon"></i>
+                <button class="btn-icon logout-mobile-btn" onclick="logoutSistema()">
+                    <i class="fas fa-sign-out-alt"></i>
                 </button>
             </div>
         </header>
@@ -630,7 +668,7 @@
     </div>
 </div>
 
-<script src="app.js?v=890"></script>
+<script src="app.js?v=893"></script>
 </body>
 </html>
 

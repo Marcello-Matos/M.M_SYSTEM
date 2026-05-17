@@ -2,6 +2,8 @@ console.log('✓ app.js v7 carregado com sucesso!');
 
 // ==================== CONFIGURACAO ====================
 const PIN_PADRAO = '1234';
+const LOGIN_USUARIO = 'admin';
+const LOGIN_SENHA = 'admin123';
 
 function gerarAccountCode() {
     // Gera código único: MM_XXXXX (5 caracteres aleatórios)
@@ -16,6 +18,73 @@ function gerarAccountCode() {
 function getUserId() {
     // Conta única fixa: todos os dispositivos compartilham os mesmos dados
     return 'account_MM_SYSTEM_MAIN';
+}
+
+function liberarSistema() {
+    const loginScreen = document.getElementById('login-screen');
+    const desktopVersion = document.getElementById('desktop-version');
+    const mobileVersion = document.getElementById('mobile-version');
+    
+    document.body.classList.remove('login-active');
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (desktopVersion) desktopVersion.classList.remove('app-locked');
+    if (mobileVersion) mobileVersion.classList.remove('app-locked');
+}
+
+function bloquearSistema() {
+    const loginScreen = document.getElementById('login-screen');
+    const desktopVersion = document.getElementById('desktop-version');
+    const mobileVersion = document.getElementById('mobile-version');
+    const loginForm = document.getElementById('loginForm');
+    const erro = document.getElementById('loginErro');
+    
+    document.body.classList.add('login-active');
+    if (loginScreen) loginScreen.style.display = 'flex';
+    if (desktopVersion) desktopVersion.classList.add('app-locked');
+    if (mobileVersion) mobileVersion.classList.add('app-locked');
+    if (loginForm) loginForm.reset();
+    if (erro) erro.textContent = '';
+}
+
+function logoutSistema() {
+    localStorage.removeItem('mm_login_autenticado');
+    sessionStorage.removeItem('mm_login_autenticado');
+    bloquearSistema();
+}
+
+function autenticarLogin(e) {
+    e.preventDefault();
+    
+    const usuario = document.getElementById('loginUsuario').value.trim();
+    const senha = document.getElementById('loginSenha').value.trim();
+    const lembrar = document.getElementById('lembrarLogin').checked;
+    const erro = document.getElementById('loginErro');
+    
+    if (usuario === LOGIN_USUARIO && senha === LOGIN_SENHA) {
+        if (lembrar) {
+            localStorage.setItem('mm_login_autenticado', 'true');
+        } else {
+            sessionStorage.setItem('mm_login_autenticado', 'true');
+        }
+        liberarSistema();
+        init();
+        return;
+    }
+    
+    if (erro) erro.textContent = 'Login ou senha inválidos';
+}
+
+function configurarLogin() {
+    document.body.classList.add('login-active');
+    
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.addEventListener('submit', autenticarLogin);
+    
+    const autenticado = localStorage.getItem('mm_login_autenticado') === 'true' || sessionStorage.getItem('mm_login_autenticado') === 'true';
+    if (autenticado) {
+        liberarSistema();
+        init();
+    }
 }
 
 function getAccountCode() {
@@ -112,6 +181,7 @@ const userId = getUserId();
 // ==================== DADOS ====================
 let produtos = [];
 let vendas = [];
+let sincronizandoPendencias = false;
 
 // ==================== UTILITARIOS ====================
 function formatarValor(valor) {
@@ -131,24 +201,67 @@ function mostrarToast(mensagem) {
     setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
+function salvarLocalPendente() {
+    localStorage.setItem('produtos', JSON.stringify(produtos));
+    localStorage.setItem('vendas', JSON.stringify(vendas));
+    localStorage.setItem('mm_sync_pendente', 'true');
+    localStorage.setItem('mm_sync_pendente_em', new Date().toISOString());
+}
+
+function existeSincronizacaoPendente() {
+    return localStorage.getItem('mm_sync_pendente') === 'true';
+}
+
+function carregarDadosLocaisPendentes() {
+    produtos = JSON.parse(localStorage.getItem('produtos') || '[]');
+    vendas = JSON.parse(localStorage.getItem('vendas') || '[]');
+}
+
+async function sincronizarPendencias() {
+    if (sincronizandoPendencias || !existeSincronizacaoPendente() || !navigator.onLine) return;
+    
+    try {
+        sincronizandoPendencias = true;
+        carregarDadosLocaisPendentes();
+        await db.collection('dados').doc(userId).set({
+            produtos: produtos,
+            vendas: vendas,
+            ultimaAtualizacao: new Date().toISOString(),
+            sincronizadoOffline: true
+        });
+        localStorage.removeItem('mm_sync_pendente');
+        localStorage.removeItem('mm_sync_pendente_em');
+        mostrarToast('✅ Dados offline sincronizados!');
+        atualizarTodasTelas();
+    } catch (e) {
+        console.error('Erro ao sincronizar pendências:', e);
+    } finally {
+        sincronizandoPendencias = false;
+    }
+}
+
 // ==================== INICIALIZAR ====================
 async function init() {
     try {
         await firebase.auth().signInAnonymously();
         console.log('Autenticado. UserID:', userId);
         
-        // Carregar dados do Firestore
-        const doc = await db.collection('dados').doc(userId).get();
-        if (doc.exists) {
-            const dados = doc.data();
-            produtos = dados.produtos || [];
-            vendas = dados.vendas || [];
+        if (existeSincronizacaoPendente()) {
+            carregarDadosLocaisPendentes();
+            await sincronizarPendencias();
+        } else {
+            const doc = await db.collection('dados').doc(userId).get();
+            if (doc.exists) {
+                const dados = doc.data();
+                produtos = dados.produtos || [];
+                vendas = dados.vendas || [];
+            }
         }
         
         atualizarTodasTelas();
         
-        // Escutar mudancas em tempo real
         db.collection('dados').doc(userId).onSnapshot((doc) => {
+            if (existeSincronizacaoPendente()) return;
             if (doc.exists) {
                 const dados = doc.data();
                 produtos = dados.produtos || [];
@@ -160,9 +273,7 @@ async function init() {
     } catch (e) {
         console.error('Erro:', e);
         mostrarToast('⚠️ Erro no Firebase. Usando dados locais.');
-        // Fallback para localStorage
-        produtos = JSON.parse(localStorage.getItem('produtos') || '[]');
-        vendas = JSON.parse(localStorage.getItem('vendas') || '[]');
+        carregarDadosLocaisPendentes();
         atualizarTodasTelas();
     }
 }
@@ -174,12 +285,13 @@ async function salvarDados() {
             vendas: vendas,
             ultimaAtualizacao: new Date().toISOString()
         });
+        localStorage.removeItem('mm_sync_pendente');
+        localStorage.removeItem('mm_sync_pendente_em');
         console.log('Dados salvos');
     } catch (e) {
         console.error('Erro ao salvar:', e);
         mostrarToast('⚠️ Erro ao salvar. Dados mantidos localmente.');
-        localStorage.setItem('produtos', JSON.stringify(produtos));
-        localStorage.setItem('vendas', JSON.stringify(vendas));
+        salvarLocalPendente();
     }
 }
 
@@ -628,7 +740,7 @@ function toggleTheme() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function() {
-    init();
+    configurarLogin();
     
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -664,4 +776,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const vendaForm = document.getElementById('vendaForm');
     if (vendaForm) vendaForm.addEventListener('submit', registrarVendaDesktop);
+    
+    window.addEventListener('online', sincronizarPendencias);
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) sincronizarPendencias();
+    });
 });
