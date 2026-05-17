@@ -14,16 +14,8 @@ function gerarAccountCode() {
 }
 
 function getUserId() {
-    // Tenta usar Account Code (sincronização entre dispositivos)
-    let accountCode = localStorage.getItem('mm_account_code');
-    
-    if (!accountCode) {
-        // Se não tem, gera um novo
-        accountCode = gerarAccountCode();
-        localStorage.setItem('mm_account_code', accountCode);
-    }
-    
-    return 'account_' + accountCode;
+    // Conta única fixa: todos os dispositivos compartilham os mesmos dados
+    return 'account_MM_SYSTEM_MAIN';
 }
 
 function getAccountCode() {
