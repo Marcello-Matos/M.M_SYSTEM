@@ -381,8 +381,73 @@ function carregarEstoqueDesktop(filtro) {
         if (disp === 0) { status = 'Vendido'; cls = 'status-vendido'; }
         else if (p.quantidadeVendida > 0) { status = 'Vendido'; cls = 'status-vendido'; }
         
-        return `<tr><td><strong>${p.codigo}</strong></td><td>${p.nome}</td><td>${p.quantidade}</td><td>${p.quantidadeVendida||0}</td><td>${formatarValor(p.custo)}</td><td>${formatarValor(p.venda)}</td><td><span class="status ${cls}">${status}</span></td><td><button class="btn btn-danger" onclick="excluirProduto(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`;
+        return `<tr><td><strong>${p.codigo}</strong></td><td>${p.nome}</td><td>${p.quantidade}</td><td>${p.quantidadeVendida||0}</td><td>${formatarValor(p.custo)}</td><td>${formatarValor(p.venda)}</td><td><span class="status ${cls}">${status}</span></td><td><div class="action-buttons"><button class="btn-action btn-edit" onclick="abrirEdicaoProduto(${p.id})"><i class="fas fa-pen"></i></button><button class="btn-action btn-delete" onclick="excluirProduto(${p.id})"><i class="fas fa-trash"></i></button></div></td></tr>`;
     }).join('');
+}
+
+function calcularEdicaoProduto() {
+    const custo = parseFloat(String(document.getElementById('editCusto').value).replace(',', '.')) || 0;
+    const porcentagem = parseFloat(String(document.getElementById('editPorcentagem').value).replace(',', '.')) || 0;
+    const valorVenda = custo + (custo * porcentagem / 100);
+    const vendaEl = document.getElementById('editVenda');
+    vendaEl.dataset.valor = valorVenda.toFixed(2);
+    vendaEl.value = formatarValor(valorVenda);
+}
+
+function abrirEdicaoProduto(id) {
+    const produto = produtos.find(p => p.id === id);
+    if (!produto) return;
+    
+    const porcentagem = produto.porcentagem ?? produto.margem ?? (produto.custo > 0 ? ((produto.venda - produto.custo) / produto.custo) * 100 : 0);
+    
+    document.getElementById('editProdutoId').value = produto.id;
+    document.getElementById('editCodigo').value = produto.codigo;
+    document.getElementById('editNome').value = produto.nome;
+    document.getElementById('editQuantidade').value = produto.quantidade;
+    document.getElementById('editQuantidadeVendida').value = produto.quantidadeVendida || 0;
+    document.getElementById('editCusto').value = produto.custo;
+    document.getElementById('editPorcentagem').value = parseFloat(porcentagem).toFixed(2);
+    calcularEdicaoProduto();
+    abrirModal('modal-editar-produto');
+}
+
+function salvarEdicaoProduto(e) {
+    e.preventDefault();
+    
+    const id = parseInt(document.getElementById('editProdutoId').value);
+    const produto = produtos.find(p => p.id === id);
+    if (!produto) return;
+    
+    const quantidade = parseInt(document.getElementById('editQuantidade').value) || 0;
+    const quantidadeVendida = parseInt(document.getElementById('editQuantidadeVendida').value) || 0;
+    const custo = parseFloat(String(document.getElementById('editCusto').value).replace(',', '.')) || 0;
+    const porcentagem = parseFloat(String(document.getElementById('editPorcentagem').value).replace(',', '.')) || 0;
+    const venda = parseFloat(document.getElementById('editVenda').dataset.valor) || 0;
+    
+    if (quantidade <= 0 || quantidadeVendida < 0 || quantidadeVendida > quantidade) {
+        mostrarToast('Verifique as quantidades informadas.');
+        return;
+    }
+    
+    produto.nome = document.getElementById('editNome').value.trim();
+    produto.quantidade = quantidade;
+    produto.quantidadeVendida = quantidadeVendida;
+    produto.custo = custo;
+    produto.porcentagem = porcentagem;
+    produto.margem = porcentagem;
+    produto.venda = venda;
+    
+    salvarDados();
+    fecharModal('modal-editar-produto');
+    mostrarToast('Produto atualizado!');
+    atualizarTodasTelas();
+}
+
+function excluirProdutoEditando() {
+    const id = parseInt(document.getElementById('editProdutoId').value);
+    if (!id) return;
+    excluirProduto(id);
+    fecharModal('modal-editar-produto');
 }
 
 function filtrarEstoque(filtro, event) {

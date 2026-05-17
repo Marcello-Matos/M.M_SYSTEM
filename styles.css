@@ -446,6 +446,105 @@ body {
     font-size: 0.85rem;
 }
 
+.action-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+}
+
+.btn-edit {
+    background: #F29B30;
+}
+
+.btn-delete {
+    background: #F20505;
+}
+
+.edit-modal-content {
+    max-width: 720px;
+    border-radius: 18px;
+    padding: 26px;
+}
+
+/* MODAL DESKTOP */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 16px;
+    padding: 24px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.btn-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #f0f0f0;
+    border: none;
+    color: #666;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+    background: #e0e0e0;
+}
+
 /* FILTROS */
 .filtros {
     display: flex;
