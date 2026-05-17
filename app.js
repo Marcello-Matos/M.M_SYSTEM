@@ -1,7 +1,7 @@
-// ==================== SISTEMA DE PIN ====================
+// ==================== CONFIGURACAO ====================
 const PIN_PADRAO = '1234';
 
-function getUserIdFromPin() {
+function getUserId() {
     let pin = localStorage.getItem('mm_pin');
     if (!pin) {
         pin = PIN_PADRAO;
@@ -10,34 +10,23 @@ function getUserIdFromPin() {
     return 'user_pin_' + pin;
 }
 
-function alterarPin() {
-    const novoPin = prompt('Digite um PIN de 4 digitos:', '1234');
-    if (novoPin && novoPin.length >= 4) {
-        localStorage.setItem('mm_pin', novoPin);
-        localStorage.removeItem('mm_user_id');
-        alert('PIN alterado! Recarregue a pagina.');
-        location.reload();
-    }
-}
+// ==================== FIREBASE ====================
+const firebaseConfig = {
+    apiKey: "AIzaSyB5yPH0GfQKN2KZIAaMct8JLFKliXdGeDY",
+    authDomain: "mmsysten.firebaseapp.com",
+    projectId: "mmsysten",
+    storageBucket: "mmsysten.firebasestorage.app",
+    messagingSenderId: "741827383663",
+    appId: "1:741827383663:web:984e0ccb601223160f189a"
+};
 
-// ==================== FIREBASE CONFIG ====================
-// Configuracao sera carregada do firebase-config.js
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const userId = getUserId();
 
-// ==================== AUTENTICACAO ANONIMA ====================
-async function autenticarUsuario() {
-    if (typeof firebase === 'undefined' || !firebase.auth) return null;
-    try {
-        let user = firebase.auth().currentUser;
-        if (!user) {
-            const credencial = await firebase.auth().signInAnonymously();
-            user = credencial.user;
-        }
-        return user.uid;
-    } catch (erro) {
-        console.error('Erro na autenticacao:', erro);
-        return null;
-    }
-}
+// ==================== DADOS ====================
+let produtos = [];
+let vendas = [];
 
 // ==================== UTILITARIOS ====================
 function formatarValor(valor) {
@@ -57,139 +46,53 @@ function mostrarToast(mensagem) {
     setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-// ==================== VARIAVEIS GLOBAIS ====================
-let produtos = [];
-let vendas = [];
-let db = null;
-let userId = null;
-
-// ==================== INICIALIZACAO FIREBASE ====================
-async function inicializarFirebase() {
-    if (typeof firebase === 'undefined') {
-        console.log('Firebase nao disponivel');
-        usarLocalStorage();
-        return;
-    }
-    
+// ==================== INICIALIZAR ====================
+async function init() {
     try {
-        db = firebase.firestore();
-        await autenticarUsuario();
+        await firebase.auth().signInAnonymously();
+        console.log('Autenticado. UserID:', userId);
         
-        // Usar PIN como ID do usuario
-        userId = getUserIdFromPin();
-        console.log('Firebase inicializado. UserID:', userId);
-        
-        await carregarDadosFirestore();
-        escutarMudancas();
-        
-    } catch (erro) {
-        console.error('Erro ao inicializar Firebase:', erro);
-        usarLocalStorage();
-    }
-}
-
-// ==================== FIRESTORE ====================
-async function carregarDadosFirestore() {
-    if (!db) return;
-    try {
+        // Carregar dados do Firestore
         const doc = await db.collection('dados').doc(userId).get();
         if (doc.exists) {
             const dados = doc.data();
             produtos = dados.produtos || [];
             vendas = dados.vendas || [];
-            console.log('Dados carregados:', produtos.length, 'produtos');
-        } else {
-            // Migrar do localStorage
-            const p = JSON.parse(localStorage.getItem('produtos') || '[]');
-            const v = JSON.parse(localStorage.getItem('vendas') || '[]');
-            if (p.length || v.length) {
-                produtos = p;
-                vendas = v;
-                await salvarDadosFirestore();
-                console.log('Dados migrados');
-            }
         }
+        
         atualizarTodasTelas();
-    } catch (erro) {
-        console.error('Erro:', erro);
-        usarLocalStorage();
+        
+        // Escutar mudancas em tempo real
+        db.collection('dados').doc(userId).onSnapshot((doc) => {
+            if (doc.exists) {
+                const dados = doc.data();
+                produtos = dados.produtos || [];
+                vendas = dados.vendas || [];
+                atualizarTodasTelas();
+            }
+        });
+        
+    } catch (e) {
+        console.error('Erro:', e);
+        // Fallback para localStorage
+        produtos = JSON.parse(localStorage.getItem('produtos') || '[]');
+        vendas = JSON.parse(localStorage.getItem('vendas') || '[]');
+        atualizarTodasTelas();
     }
 }
 
-async function salvarDadosFirestore() {
-    if (!db) {
-        localStorage.setItem('produtos', JSON.stringify(produtos));
-        localStorage.setItem('vendas', JSON.stringify(vendas));
-        return;
-    }
+async function salvarDados() {
     try {
         await db.collection('dados').doc(userId).set({
             produtos: produtos,
             vendas: vendas,
             ultimaAtualizacao: new Date().toISOString()
         });
-        console.log('Dados salvos no Firestore');
-    } catch (erro) {
-        console.error('Erro ao salvar:', erro);
+        console.log('Dados salvos');
+    } catch (e) {
+        console.error('Erro ao salvar:', e);
         localStorage.setItem('produtos', JSON.stringify(produtos));
         localStorage.setItem('vendas', JSON.stringify(vendas));
-    }
-}
-
-function escutarMudancas() {
-    if (!db) return;
-    db.collection('dados').doc(userId).onSnapshot((doc) => {
-        if (doc.exists) {
-            const dados = doc.data();
-            if (JSON.stringify(produtos) !== JSON.stringify(dados.produtos || []) ||
-                JSON.stringify(vendas) !== JSON.stringify(dados.vendas || [])) {
-                produtos = dados.produtos || [];
-                vendas = dados.vendas || [];
-                console.log('Dados atualizados em tempo real');
-                atualizarTodasTelas();
-            }
-        }
-    });
-}
-
-function usarLocalStorage() {
-    db = null;
-    produtos = JSON.parse(localStorage.getItem('produtos') || '[]');
-    vendas = JSON.parse(localStorage.getItem('vendas') || '[]');
-    atualizarTodasTelas();
-}
-
-// ==================== SINCRONIZAR ====================
-async function sincronizarDados() {
-    if (!db) {
-        alert('Firebase nao disponivel');
-        return;
-    }
-    try {
-        const p = JSON.parse(localStorage.getItem('produtos') || '[]');
-        const v = JSON.parse(localStorage.getItem('vendas') || '[]');
-        
-        if (!p.length && !v.length) {
-            alert('Nenhum dado local para sincronizar');
-            return;
-        }
-        
-        const pExistentes = produtos.map(x => x.id);
-        const vExistentes = vendas.map(x => x.id);
-        
-        let np = 0, nv = 0;
-        p.forEach(x => { if (!pExistentes.includes(x.id)) { produtos.push(x); np++; } });
-        v.forEach(x => { if (!vExistentes.includes(x.id)) { vendas.push(x); nv++; } });
-        
-        await salvarDadosFirestore();
-        localStorage.removeItem('produtos');
-        localStorage.removeItem('vendas');
-        
-        alert('Sincronizado! ' + np + ' produtos, ' + nv + ' vendas');
-        atualizarTodasTelas();
-    } catch (e) {
-        console.error(e);
-        alert('Erro ao sincronizar');
     }
 }
 
@@ -215,9 +118,6 @@ function mostrarAba(aba) {
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('aba-' + aba).classList.add('active');
     event.target.classList.add('active');
-    if (aba === 'estoque') carregarEstoqueDesktop();
-    if (aba === 'vendas') carregarVendasDesktop();
-    if (aba === 'relatorio') atualizarRelatorioDesktop();
 }
 
 function calcularValores() {
@@ -246,7 +146,7 @@ function adicionarProduto(e) {
         data: new Date().toLocaleDateString()
     });
     
-    salvarDadosFirestore();
+    salvarDados();
     alert('Produto cadastrado!');
     limparFormulario();
     carregarEstoqueDesktop();
@@ -284,7 +184,7 @@ function filtrarEstoque(filtro) {
 function excluirProduto(id) {
     if (!confirm('Excluir produto?')) return;
     produtos = produtos.filter(p => p.id !== id);
-    salvarDadosFirestore();
+    salvarDados();
     carregarEstoqueDesktop();
 }
 
@@ -333,7 +233,7 @@ function registrarVendaDesktop(e) {
         total: produto.venda * qtd, lucro: (produto.venda - produto.custo) * qtd
     });
     
-    salvarDadosFirestore();
+    salvarDados();
     alert('Venda registrada!');
     document.getElementById('vendaForm').reset();
     ['precoVenda','totalVenda','lucroVenda','lucroTotalVenda'].forEach(id => document.getElementById(id).value = '');
@@ -440,7 +340,7 @@ function cadastrarProdutoMobile(e) {
         venda: custo + (custo*margem/100), data: new Date().toLocaleDateString()
     });
     
-    salvarDadosFirestore();
+    salvarDados();
     fecharModal('modal-cadastrar');
     mostrarToast('Produto cadastrado!');
     atualizarDashboard();
@@ -496,7 +396,7 @@ function verDetalhesProduto(id) {
     const disp = p.quantidade - (p.quantidadeVendida||0);
     if (confirm(`${p.nome}\nCodigo: ${p.codigo}\nQtd: ${p.quantidade}\nVendido: ${p.quantidadeVendida||0}\nDisp: ${disp}\nCusto: ${formatarValor(p.custo)}\nVenda: ${formatarValor(p.venda)}\n\nExcluir?`)) {
         produtos = produtos.filter(x => x.id !== id);
-        salvarDadosFirestore();
+        salvarDados();
         mostrarToast('Excluido!');
         carregarEstoqueMobile();
         atualizarDashboard();
@@ -551,7 +451,7 @@ function registrarVendaMobile(e) {
         total: p.venda*qtd, lucro: (p.venda-p.custo)*qtd
     });
     
-    salvarDadosFirestore();
+    salvarDados();
     fecharModal('modal-vender');
     mostrarToast('Venda registrada!');
     atualizarDashboard();
@@ -624,7 +524,7 @@ function toggleTheme() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function() {
-    inicializarFirebase();
+    init();
     
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
