@@ -1600,3 +1600,479 @@ tr:hover {
         font-size: 0.85rem;
     }
 }
+
+/* ===================================================== */
+/* PREMIUM UI - M.M STORE                                */
+/* ===================================================== */
+:root {
+    --premium-black: #0D0D0D;
+    --premium-brown: #BF3604;
+    --premium-red: #F20505;
+    --premium-orange: #F29B30;
+    --premium-gold: #F2E205;
+    --premium-cream: #fff8e8;
+    --premium-card: rgba(255, 255, 255, 0.96);
+    --premium-border: rgba(242, 155, 48, 0.22);
+    --premium-shadow: 0 22px 60px rgba(13, 13, 13, 0.22);
+    --premium-soft-shadow: 0 12px 32px rgba(13, 13, 13, 0.12);
+}
+
+@keyframes premiumFadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes premiumGlow {
+    0%, 100% { box-shadow: 0 22px 60px rgba(13, 13, 13, 0.22); }
+    50% { box-shadow: 0 26px 74px rgba(191, 54, 4, 0.28); }
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: radial-gradient(circle at 12% 8%, rgba(242, 226, 5, 0.18), transparent 28%), radial-gradient(circle at 88% 18%, rgba(242, 5, 5, 0.18), transparent 24%), linear-gradient(135deg, #0D0D0D 0%, #1d120d 46%, #BF3604 100%) !important;
+    color: var(--premium-black);
+}
+
+.login-screen {
+    background: radial-gradient(circle at top left, rgba(242, 226, 5, 0.28), transparent 34%), radial-gradient(circle at bottom right, rgba(242, 5, 5, 0.25), transparent 32%), linear-gradient(135deg, #0D0D0D 0%, #1f120b 52%, #BF3604 100%) !important;
+}
+
+.login-card {
+    width: min(1040px, 100%);
+    min-height: 560px;
+    border: 1px solid rgba(242, 155, 48, 0.35);
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 34px 90px rgba(0, 0, 0, 0.42);
+    animation: premiumFadeUp 0.55s ease both;
+}
+
+.login-hero {
+    background: linear-gradient(135deg, rgba(13, 13, 13, 0.98), rgba(191, 54, 4, 0.84)), linear-gradient(150deg, #0D0D0D 0%, #BF3604 56%, #F29B30 100%) !important;
+}
+
+.login-hero::before {
+    background: repeating-linear-gradient(135deg, rgba(242, 226, 5, 0.13) 0 2px, transparent 2px 34px);
+}
+
+.login-hero::after {
+    background: rgba(242, 226, 5, 0.22);
+}
+
+.login-logo-img,
+.header-logo-img,
+.mobile-logo-img {
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.35));
+}
+
+.login-logo-img {
+    max-height: 118px;
+}
+
+.login-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #fff8e8 100%) !important;
+}
+
+.login-form h2,
+.dashboard-header h2,
+.page-header h2,
+.section-title h3,
+.modal-header h3 {
+    color: var(--premium-black) !important;
+    letter-spacing: -0.4px;
+}
+
+.login-input input,
+.form-group input,
+.form-group select,
+.search-bar input {
+    border: 1px solid rgba(191, 54, 4, 0.16) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 8px 18px rgba(13,13,13,0.06);
+}
+
+.login-input input:focus,
+.form-group input:focus,
+.form-group select:focus,
+.search-bar input:focus {
+    border-color: var(--premium-orange) !important;
+    box-shadow: 0 0 0 4px rgba(242, 155, 48, 0.18), 0 12px 24px rgba(13,13,13,0.08) !important;
+}
+
+.login-button,
+.btn-primary,
+.btn-submit,
+.center-icon,
+.bg-primary {
+    background: linear-gradient(135deg, #0D0D0D 0%, #BF3604 58%, #F29B30 100%) !important;
+    color: white !important;
+    box-shadow: 0 14px 26px rgba(191, 54, 4, 0.28);
+}
+
+.login-button:hover,
+.btn:hover,
+.btn-submit:hover,
+.action-btn:hover,
+.card:hover,
+.product-card:hover,
+.sale-card:hover {
+    transform: translateY(-3px);
+}
+
+.header,
+.form-section,
+.list-section,
+.relatorio-section,
+.vendas-section {
+    animation: premiumFadeUp 0.45s ease both;
+}
+
+.header-logo-img {
+    max-width: min(430px, 68vw);
+    max-height: 132px;
+    border-radius: 22px;
+}
+
+.logout-btn,
+.btn-icon {
+    border: 1px solid rgba(242, 226, 5, 0.32) !important;
+    background: rgba(13, 13, 13, 0.48) !important;
+    backdrop-filter: blur(12px);
+}
+
+.tabs {
+    padding: 8px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 18px;
+    background: rgba(13, 13, 13, 0.28);
+    border: 1px solid rgba(242, 226, 5, 0.16);
+    backdrop-filter: blur(14px);
+}
+
+.tab-btn {
+    border: 1px solid rgba(242, 226, 5, 0.18);
+    background: rgba(13, 13, 13, 0.38);
+    border-radius: 14px;
+}
+
+.tab-btn.active,
+.tab-btn:hover {
+    background: linear-gradient(135deg, #F2E205 0%, #F29B30 100%) !important;
+    color: #0D0D0D !important;
+    box-shadow: 0 12px 28px rgba(242, 155, 48, 0.28);
+}
+
+.form-section,
+.list-section,
+.relatorio-section,
+.vendas-section,
+.card,
+.quick-actions,
+.product-card,
+.sale-card,
+.modal-content {
+    border: 1px solid var(--premium-border) !important;
+    background: var(--premium-card) !important;
+    box-shadow: var(--premium-soft-shadow) !important;
+}
+
+.form-section,
+.list-section,
+.relatorio-section,
+.vendas-section {
+    border-radius: 22px;
+}
+
+.form-section h2 i,
+.list-section h2 i,
+.modal-header h3 i {
+    color: var(--premium-orange) !important;
+}
+
+.btn,
+.btn-action {
+    border-radius: 14px;
+}
+
+.btn-secondary {
+    background: #fff4dc !important;
+    color: #5c2a0d !important;
+}
+
+.btn-success,
+.bg-success {
+    background: linear-gradient(135deg, #F29B30 0%, #BF3604 100%) !important;
+}
+
+.btn-edit {
+    background: #F29B30 !important;
+}
+
+.btn-danger,
+.btn-delete {
+    background: linear-gradient(135deg, #F20505 0%, #BF3604 100%) !important;
+}
+
+.btn-filter,
+.chip {
+    border-color: var(--premium-orange) !important;
+    color: var(--premium-brown) !important;
+    background: #fffaf0 !important;
+}
+
+.btn-filter.active,
+.btn-filter:hover,
+.chip.active {
+    background: linear-gradient(135deg, #F29B30, #BF3604) !important;
+    color: white !important;
+}
+
+.table-container {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(191,54,4,0.12);
+}
+
+table {
+    margin-top: 0;
+}
+
+th {
+    background: linear-gradient(180deg, #15110f 0%, #2a1710 100%) !important;
+    color: #F2E205 !important;
+}
+
+td {
+    background: rgba(255,255,255,0.78);
+}
+
+tr:hover td {
+    background: #fff8e8 !important;
+}
+
+.status {
+    border-radius: 999px;
+}
+
+.total-card {
+    border-radius: 22px;
+    min-height: 128px;
+    box-shadow: var(--premium-shadow);
+    animation: premiumGlow 4s ease-in-out infinite;
+}
+
+.total-card.investimento {
+    background: linear-gradient(135deg, #0D0D0D 0%, #BF3604 100%) !important;
+}
+
+.total-card.vendas {
+    background: linear-gradient(135deg, #F29B30 0%, #BF3604 100%) !important;
+}
+
+.total-card.lucro {
+    background: linear-gradient(135deg, #F2E205 0%, #F29B30 100%) !important;
+    color: #0D0D0D !important;
+}
+
+.total-card.estoque {
+    background: linear-gradient(135deg, #BF3604 0%, #F20505 100%) !important;
+}
+
+@media (max-width: 768px) {
+    body {
+        background: #f7f1e7 !important;
+    }
+
+    .login-card {
+        border-radius: 24px;
+    }
+
+    .login-logo-img {
+        max-height: 92px;
+    }
+
+    .app-header {
+        background: linear-gradient(135deg, #0D0D0D 0%, #BF3604 70%, #F29B30 100%) !important;
+        border-bottom: 2px solid rgba(242, 226, 5, 0.36);
+        box-shadow: 0 12px 34px rgba(13,13,13,0.26);
+    }
+
+    .mobile-logo-img {
+        max-height: 64px;
+        max-width: 220px;
+    }
+
+    .card {
+        border-radius: 20px;
+        padding: 18px;
+    }
+
+    .card-icon,
+    .action-icon {
+        border-radius: 14px;
+    }
+
+    .card-primary .card-icon,
+    .card-success .card-icon,
+    .card-warning .card-icon {
+        background: rgba(242, 155, 48, 0.14) !important;
+        color: #BF3604 !important;
+    }
+
+    .card-danger .card-icon {
+        background: rgba(242, 5, 5, 0.12) !important;
+        color: #F20505 !important;
+    }
+
+    .bg-warning {
+        background: #F29B30 !important;
+        color: #0D0D0D !important;
+    }
+
+    .bg-info {
+        background: #BF3604 !important;
+    }
+
+    .product-img {
+        background: linear-gradient(135deg, #0D0D0D, #BF3604, #F29B30) !important;
+    }
+
+    .bottom-nav {
+        border-top: 1px solid rgba(191,54,4,0.12);
+        box-shadow: 0 -14px 32px rgba(13,13,13,0.12);
+    }
+
+    .nav-item.active {
+        color: #BF3604 !important;
+    }
+
+    .center-icon {
+        border-color: #f7f1e7;
+    }
+
+    .progress-fill {
+        background: linear-gradient(90deg, #F29B30, #BF3604, #F20505) !important;
+    }
+}
+
+/* ===================================================== */
+/* CLEAN UI - SEM PRETO PESADO                           */
+/* ===================================================== */
+body {
+    background: radial-gradient(circle at 10% 8%, rgba(242, 226, 5, 0.24), transparent 28%), radial-gradient(circle at 92% 12%, rgba(242, 155, 48, 0.22), transparent 26%), linear-gradient(135deg, #fffaf0 0%, #fff3d8 48%, #f7d7aa 100%) !important;
+    color: #3d250f;
+}
+
+.login-screen {
+    background: radial-gradient(circle at top left, rgba(242, 226, 5, 0.28), transparent 34%), radial-gradient(circle at bottom right, rgba(242, 155, 48, 0.22), transparent 32%), linear-gradient(135deg, #fffaf0 0%, #fff0cc 52%, #F29B30 100%) !important;
+}
+
+.login-card {
+    border: 1px solid rgba(242, 155, 48, 0.34);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 30px 80px rgba(191, 54, 4, 0.18);
+}
+
+.login-hero {
+    background: linear-gradient(135deg, rgba(255, 250, 240, 0.96), rgba(242, 155, 48, 0.72)), linear-gradient(150deg, #fff8e8 0%, #F29B30 58%, #BF3604 100%) !important;
+    color: #4a2508;
+}
+
+.login-welcome h1,
+.login-welcome p {
+    color: #4a2508;
+}
+
+.login-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #fff8e8 100%) !important;
+}
+
+.login-button,
+.btn-primary,
+.btn-submit,
+.center-icon,
+.bg-primary {
+    background: linear-gradient(135deg, #BF3604 0%, #F29B30 72%, #F2E205 100%) !important;
+    color: white !important;
+    box-shadow: 0 14px 26px rgba(242, 155, 48, 0.28);
+}
+
+.header,
+.header p {
+    color: #4a2508;
+}
+
+.logout-btn,
+.btn-icon {
+    background: rgba(255, 255, 255, 0.68) !important;
+    color: #BF3604 !important;
+    border: 1px solid rgba(191, 54, 4, 0.18) !important;
+    box-shadow: 0 10px 24px rgba(191, 54, 4, 0.12);
+}
+
+.tabs {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(242, 155, 48, 0.24);
+    box-shadow: 0 16px 34px rgba(191, 54, 4, 0.1);
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.78);
+    color: #BF3604;
+    border: 1px solid rgba(242, 155, 48, 0.22);
+}
+
+.tab-btn.active,
+.tab-btn:hover {
+    background: linear-gradient(135deg, #F2E205 0%, #F29B30 100%) !important;
+    color: #4a2508 !important;
+}
+
+th {
+    background: linear-gradient(180deg, #fff4dc 0%, #ffe2ae 100%) !important;
+    color: #7a2b05 !important;
+}
+
+td {
+    background: rgba(255,255,255,0.86);
+}
+
+.total-card.investimento {
+    background: linear-gradient(135deg, #BF3604 0%, #F29B30 100%) !important;
+}
+
+.total-card.vendas {
+    background: linear-gradient(135deg, #F29B30 0%, #F2E205 100%) !important;
+    color: #4a2508 !important;
+}
+
+.total-card.lucro {
+    background: linear-gradient(135deg, #fff0a6 0%, #F29B30 100%) !important;
+    color: #4a2508 !important;
+}
+
+.total-card.estoque {
+    background: linear-gradient(135deg, #F29B30 0%, #BF3604 100%) !important;
+}
+
+@media (max-width: 768px) {
+    body {
+        background: #fff8e8 !important;
+    }
+
+    .app-header {
+        background: linear-gradient(135deg, #fff7df 0%, #F29B30 72%, #BF3604 100%) !important;
+        border-bottom: 2px solid rgba(191, 54, 4, 0.12);
+        box-shadow: 0 12px 34px rgba(191, 54, 4, 0.14);
+    }
+
+    .product-img,
+    .center-icon {
+        background: linear-gradient(135deg, #BF3604, #F29B30, #F2E205) !important;
+    }
+}
