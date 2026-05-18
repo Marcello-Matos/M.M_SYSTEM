@@ -2076,3 +2076,222 @@ td {
         background: linear-gradient(135deg, #BF3604, #F29B30, #F2E205) !important;
     }
 }
+
+/* ===================================================== */
+/* MICROANIMACOES PREMIUM                                */
+/* ===================================================== */
+@keyframes softFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes shineSweep {
+    0% { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+    18% { opacity: 0.55; }
+    48% { opacity: 0.25; }
+    100% { transform: translateX(160%) skewX(-18deg); opacity: 0; }
+}
+
+@keyframes softPulse {
+    0%, 100% { box-shadow: 0 14px 26px rgba(242, 155, 48, 0.24); }
+    50% { box-shadow: 0 18px 38px rgba(242, 155, 48, 0.38); }
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes loadingSpin {
+    to { transform: rotate(360deg); }
+}
+
+* {
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity, filter;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+button,
+.btn,
+.btn-submit,
+.login-button,
+.tab-btn,
+.nav-item,
+.action-btn,
+.card,
+.product-card,
+.sale-card,
+.total-card {
+    will-change: transform, box-shadow;
+}
+
+.btn,
+.btn-submit,
+.login-button,
+.tab-btn,
+.action-btn,
+.nav-item.center-btn,
+.center-icon {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after,
+.btn-submit::after,
+.login-button::after,
+.tab-btn::after,
+.action-btn::after,
+.center-icon::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -60%;
+    width: 42%;
+    height: 180%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.58), transparent);
+    transform: translateX(-140%) skewX(-18deg);
+    pointer-events: none;
+}
+
+.btn:hover::after,
+.btn-submit:hover::after,
+.login-button:hover::after,
+.tab-btn:hover::after,
+.action-btn:hover::after,
+.center-icon:hover::after {
+    animation: shineSweep 0.85s ease;
+}
+
+.btn:hover,
+.btn-submit:hover,
+.login-button:hover {
+    filter: saturate(1.08) brightness(1.03);
+}
+
+.btn:active,
+.btn-submit:active,
+.login-button:active,
+.tab-btn:active,
+.action-btn:active,
+.card:active,
+.product-card:active,
+.sale-card:active {
+    transform: translateY(1px) scale(0.98);
+}
+
+.login-logo-img,
+.header-logo-img {
+    animation: softFloat 5s ease-in-out infinite;
+}
+
+.login-card,
+.modal-content,
+.form-section,
+.list-section,
+.relatorio-section,
+.vendas-section,
+.card,
+.quick-actions,
+.product-card,
+.sale-card,
+.bottom-nav,
+.app-header {
+    backdrop-filter: blur(16px) saturate(1.08);
+}
+
+.card:hover,
+.product-card:hover,
+.sale-card:hover,
+.action-btn:hover,
+.form-section:hover,
+.list-section:hover {
+    box-shadow: 0 18px 46px rgba(191, 54, 4, 0.16) !important;
+}
+
+.total-card:hover {
+    transform: translateY(-7px) scale(1.01);
+    filter: saturate(1.08);
+}
+
+.center-icon,
+.login-button,
+.btn-primary,
+.btn-submit {
+    animation: softPulse 3.8s ease-in-out infinite;
+}
+
+.modal.active .modal-content {
+    animation: modalPop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.modal.active {
+    backdrop-filter: blur(8px);
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.login-input input:hover,
+.search-bar input:hover {
+    border-color: rgba(242, 155, 48, 0.45) !important;
+    box-shadow: 0 10px 24px rgba(191, 54, 4, 0.08);
+}
+
+.nav-item:hover,
+.nav-item.active {
+    transform: translateY(-2px);
+}
+
+.nav-item.active i {
+    filter: drop-shadow(0 6px 10px rgba(191, 54, 4, 0.22));
+}
+
+.toast.show {
+    animation: modalPop 0.28s ease both;
+}
+
+.progress-fill {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.42), transparent);
+    animation: shineSweep 2.4s ease-in-out infinite;
+}
+
+.btn.loading,
+.btn-submit.loading,
+.login-button.loading {
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.btn.loading::before,
+.btn-submit.loading::before,
+.login-button.loading::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.48);
+    border-top-color: white;
+    left: calc(50% - 9px);
+    top: calc(50% - 9px);
+    animation: loadingSpin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
+}
