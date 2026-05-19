@@ -8,8 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="design-tokens.css">
-    <link rel="stylesheet" href="styles.css?v=12">
+    <link rel="stylesheet" href="styles.css?v=14">
+    <link rel="stylesheet" href="animations.css">
     <link rel="stylesheet" href="dark-mode.css">
+    <link rel="stylesheet" href="fase4.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -724,10 +726,16 @@
             <span id="toastMsg">Operacao realizada!</span>
         </div>
 
+        <!-- Scroll to Top (Mobile) -->
+        <button class="scroll-to-top" id="scrollToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Voltar ao topo">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+
     </div>
 </div>
 
 <script src="app.js?v=893"></script>
+<script src="fase4.js"></script>
 </body>
 </html>
 

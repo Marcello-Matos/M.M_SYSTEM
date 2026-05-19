@@ -196,9 +196,21 @@ function mostrarToast(mensagem) {
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toastMsg');
     if (!toast) return;
+    
+    // Remove hiding class se estiver saindo
+    toast.classList.remove('hiding');
     toastMsg.textContent = mensagem;
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2500);
+    
+    // Limpa timeout anterior se existir
+    if (toast._timeout) clearTimeout(toast._timeout);
+    
+    toast._timeout = setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => {
+            toast.classList.remove('show', 'hiding');
+        }, 400);
+    }, 2500);
 }
 
 function salvarLocalPendente() {
@@ -313,9 +325,26 @@ function atualizarTodasTelas() {
 
 // ==================== DESKTOP ====================
 function mostrarAba(aba, event) {
-    document.querySelectorAll('.aba-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('aba-' + aba).classList.add('active');
+    const abas = document.querySelectorAll('.aba-content');
+    const botoes = document.querySelectorAll('.tab-btn');
+    const abaAtual = document.querySelector('.aba-content.active');
+    const novaAba = document.getElementById('aba-' + aba);
+    
+    // Anima saida da aba atual
+    if (abaAtual && abaAtual !== novaAba) {
+        abaAtual.classList.add('tab-exit');
+        setTimeout(() => {
+            abaAtual.classList.remove('active', 'tab-exit');
+        }, 300);
+    }
+    
+    botoes.forEach(el => el.classList.remove('active'));
+    
+    // Pequeno delay para a transicao visual
+    setTimeout(() => {
+        if (novaAba) novaAba.classList.add('active');
+    }, abaAtual && abaAtual !== novaAba ? 150 : 0);
+    
     const btn = document.querySelector(`.tab-btn[onclick*="${aba}"]`);
     if (btn) btn.classList.add('active');
 }
@@ -344,7 +373,7 @@ function adicionarProduto(e) {
     const vendaEl = document.getElementById('venda');
     const venda = parseFloat(vendaEl.dataset.valor || vendaEl.value) || 0;
     
-    produtos.push({
+    const novoProduto = {
         id: Date.now(),
         codigo: gerarCodigo(),
         nome: document.getElementById('nome').value,
@@ -354,12 +383,26 @@ function adicionarProduto(e) {
         porcentagem: porcentagem,
         venda: venda,
         data: new Date().toLocaleDateString()
-    });
+    };
+    
+    produtos.push(novoProduto);
     
     salvarDados();
     alert('Produto cadastrado!');
     limparFormulario();
     carregarEstoqueDesktop();
+    
+    // Feedback visual: pisca verde no primeiro item da lista
+    setTimeout(() => {
+        const tbody = document.getElementById('listaEstoque');
+        if (tbody) {
+            const primeiraLinha = tbody.querySelector('tr');
+            if (primeiraLinha) {
+                primeiraLinha.classList.add('flash-green');
+                setTimeout(() => primeiraLinha.classList.remove('flash-green'), 800);
+            }
+        }
+    }, 100);
 }
 
 function carregarEstoqueDesktop(filtro) {
@@ -371,17 +414,29 @@ function carregarEstoqueDesktop(filtro) {
     else if (filtro === 'vendido') filtrados = produtos.filter(p => p.quantidadeVendida > 0);
     
     if (!filtrados.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#999;">Nenhum produto</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state" style="text-align:center;padding:30px;"><i class="fas fa-box-open"></i><p>Nenhum produto cadastrado</p></td></tr>';
         return;
     }
     
-    tbody.innerHTML = filtrados.map(p => {
+    tbody.innerHTML = filtrados.map((p, index) => {
         const disp = p.quantidade - (p.quantidadeVendida || 0);
         let status = 'Disponivel', cls = 'status-disponivel';
         if (disp === 0) { status = 'Vendido'; cls = 'status-vendido'; }
         else if (p.quantidadeVendida > 0) { status = 'Vendido'; cls = 'status-vendido'; }
         
-        return `<tr><td><strong>${p.codigo}</strong></td><td>${p.nome}</td><td>${p.quantidade}</td><td>${p.quantidadeVendida||0}</td><td>${formatarValor(p.custo)}</td><td>${formatarValor(p.venda)}</td><td><span class="status ${cls}">${status}</span></td><td><div class="action-buttons"><button class="btn-action btn-edit" onclick="abrirEdicaoProduto(${p.id})"><i class="fas fa-pen"></i></button><button class="btn-action btn-delete" onclick="excluirProduto(${p.id})"><i class="fas fa-trash"></i></button></div></td></tr>`;
+        return `<tr class="stagger-row" data-id="${p.id}">
+            <td><strong>${p.codigo}</strong></td>
+            <td>${p.nome}</td>
+            <td>${p.quantidade}</td>
+            <td>${p.quantidadeVendida||0}</td>
+            <td>${formatarValor(p.custo)}</td>
+            <td>${formatarValor(p.venda)}</td>
+            <td><span class="status ${cls}">${status}</span></td>
+            <td><div class="action-buttons">
+                <button class="btn-action btn-edit" onclick="abrirEdicaoProduto(${p.id})"><i class="fas fa-pen"></i></button>
+                <button class="btn-action btn-delete" onclick="excluirProduto(${p.id})"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`;
     }).join('');
 }
 
@@ -438,8 +493,23 @@ function salvarEdicaoProduto(e) {
     produto.venda = venda;
     
     salvarDados();
-    fecharModal('modal-editar-produto');
+    
+    // Fecha modal com animacao suave
+    fecharModalAnimado('modal-editar-produto');
     mostrarToast('Produto atualizado!');
+    
+    // Feedback visual: pisca laranja na linha editada
+    setTimeout(() => {
+        const tbody = document.getElementById('listaEstoque');
+        if (tbody) {
+            const linha = tbody.querySelector(`tr[data-id="${id}"]`);
+            if (linha) {
+                linha.classList.add('flash-orange');
+                setTimeout(() => linha.classList.remove('flash-orange'), 800);
+            }
+        }
+    }, 350);
+    
     atualizarTodasTelas();
 }
 
@@ -459,6 +529,23 @@ function filtrarEstoque(filtro, event) {
 
 function excluirProduto(id) {
     if (!confirm('Excluir produto?')) return;
+    
+    // Feedback visual: anima exclusao na tabela desktop
+    const tbody = document.getElementById('listaEstoque');
+    if (tbody) {
+        const linha = tbody.querySelector(`tr[data-id="${id}"]`);
+        if (linha) {
+            linha.classList.add('deleting-row');
+            setTimeout(() => {
+                produtos = produtos.filter(p => p.id !== id);
+                salvarDados();
+                carregarEstoqueDesktop();
+            }, 400);
+            return;
+        }
+    }
+    
+    // Fallback se nao encontrar a linha
     produtos = produtos.filter(p => p.id !== id);
     salvarDados();
     carregarEstoqueDesktop();
@@ -501,7 +588,8 @@ function registrarVendaDesktop(e) {
     const disp = produto.quantidade - (produto.quantidadeVendida || 0);
     if (qtd > disp) { alert(`Apenas ${disp} disponiveis`); return; }
     
-    produto.quantidadeVendida = (produto.quantidadeVendida || 0) + qtd;
+    const qtdAnterior = produto.quantidadeVendida || 0;
+    produto.quantidadeVendida = qtdAnterior + qtd;
     vendas.push({
         id: Date.now(), data: new Date().toLocaleDateString(),
         produtoId: produto.id, codigo: produto.codigo, nome: produto.nome,
@@ -515,16 +603,40 @@ function registrarVendaDesktop(e) {
     ['precoVenda','totalVenda','lucroVenda','lucroTotalVenda'].forEach(id => document.getElementById(id).value = '');
     carregarVendasDesktop();
     carregarSelectProdutosDesktop();
+    carregarEstoqueDesktop();
+    
+    // Feedback visual: contador animado no estoque
+    setTimeout(() => {
+        const tbody = document.getElementById('listaEstoque');
+        if (tbody) {
+            const linha = tbody.querySelector(`tr[data-id="${produtoId}"]`);
+            if (linha) {
+                const tdVendido = linha.querySelector('td:nth-child(4)');
+                if (tdVendido) {
+                    tdVendido.classList.add('count-update');
+                    setTimeout(() => tdVendido.classList.remove('count-update'), 300);
+                }
+            }
+        }
+    }, 100);
 }
 
 function carregarVendasDesktop() {
     const tbody = document.getElementById('listaVendas');
     if (!tbody) return;
     if (!vendas.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">Nenhuma venda</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="text-align:center;padding:30px;"><i class="fas fa-shopping-bag"></i><p>Nenhuma venda registrada</p></td></tr>';
         return;
     }
-    tbody.innerHTML = vendas.slice().reverse().map(v => `<tr><td>${v.data}</td><td><strong>${v.codigo}</strong></td><td>${v.nome}</td><td>${v.quantidade}</td><td>${formatarValor(v.vendaUnit)}</td><td>${formatarValor(v.total)}</td><td><strong style="color:#27ae60;">${formatarValor(v.lucro)}</strong></td></tr>`).join('');
+    tbody.innerHTML = vendas.slice().reverse().map((v, index) => `<tr class="stagger-row">
+        <td>${v.data}</td>
+        <td><strong>${v.codigo}</strong></td>
+        <td>${v.nome}</td>
+        <td>${v.quantidade}</td>
+        <td>${formatarValor(v.vendaUnit)}</td>
+        <td>${formatarValor(v.total)}</td>
+        <td><strong style="color:#27ae60;">${formatarValor(v.lucro)}</strong></td>
+    </tr>`).join('');
 }
 
 function atualizarRelatorioDesktop() {
@@ -544,10 +656,30 @@ function atualizarRelatorioDesktop() {
 
 // ==================== MOBILE ====================
 function mostrarTela(tela) {
-    document.querySelectorAll('.tela').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    const telaEl = document.getElementById('tela-' + tela);
-    if (telaEl) telaEl.classList.add('active');
+    const telas = document.querySelectorAll('.tela');
+    const navItems = document.querySelectorAll('.nav-item');
+    const telaAtual = document.querySelector('.tela.active');
+    const novaTela = document.getElementById('tela-' + tela);
+    
+    // Anima saida da tela atual
+    if (telaAtual && telaAtual !== novaTela) {
+        telaAtual.style.opacity = '0';
+        telaAtual.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+            telaAtual.classList.remove('active');
+            telaAtual.style.opacity = '';
+            telaAtual.style.transform = '';
+        }, 250);
+    }
+    
+    navItems.forEach(el => el.classList.remove('active'));
+    
+    setTimeout(() => {
+        if (novaTela) {
+            novaTela.classList.add('active');
+        }
+    }, telaAtual && telaAtual !== novaTela ? 150 : 0);
+    
     const navItem = document.querySelector(`.nav-item[data-tela="${tela}"]`);
     if (navItem) navItem.classList.add('active');
     if (tela === 'dashboard') atualizarDashboard();
@@ -557,9 +689,11 @@ function mostrarTela(tela) {
     window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// ==================== MODAL ANIMADO ====================
 function abrirModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        modal.classList.remove('closing');
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         if (modalId === 'modal-vender') carregarSelectProdutosMobile();
@@ -569,11 +703,18 @@ function abrirModal(modalId) {
 function fecharModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-        const form = modal.querySelector('form');
-        if (form) form.reset();
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.classList.remove('active', 'closing');
+            document.body.style.overflow = '';
+            const form = modal.querySelector('form');
+            if (form) form.reset();
+        }, 300);
     }
+}
+
+function fecharModalAnimado(modalId) {
+    fecharModal(modalId);
 }
 
 window.onclick = function(e) {
@@ -640,18 +781,18 @@ function carregarEstoqueMobile() {
     else if (filtroAtual === 'vendido') f = f.filter(p => (p.quantidadeVendida||0) > 0);
     
     if (!f.length) {
-        lista.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Nenhum produto</p></div>';
+        lista.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Nenhum produto cadastrado</p></div>';
         return;
     }
     
-    lista.innerHTML = f.map(p => {
+    lista.innerHTML = f.map((p, index) => {
         const disp = p.quantidade - (p.quantidadeVendida||0);
         const pct = Math.round((disp/p.quantidade)*100);
         let st = 'disponivel', txt = 'Disponivel';
         if (disp===0) { st='vendido'; txt='Vendido'; }
         else if (p.quantidadeVendida>0) { st='vendido'; txt='Vendido'; }
         
-        return `<div class="product-card" onclick="verDetalhesProduto(${p.id})">
+        return `<div class="product-card stagger-card" data-id="${p.id}" onclick="verDetalhesProduto(${p.id})">
             <div class="product-img"><i class="fas fa-tshirt"></i></div>
             <div class="product-info"><div class="product-name">${p.nome}</div><div class="product-meta"><span class="status-badge status-${st}">${txt}</span><span>${p.codigo}</span></div></div>
             <div class="product-price"><div class="price">${formatarValor(p.venda)}</div><div class="stock">${disp}/${p.quantidade} disp.</div></div>
@@ -676,6 +817,20 @@ function verDetalhesProduto(id) {
     if (!p) return;
     const disp = p.quantidade - (p.quantidadeVendida||0);
     if (confirm(`${p.nome}\nCodigo: ${p.codigo}\nQtd: ${p.quantidade}\nVendido: ${p.quantidadeVendida||0}\nDisp: ${disp}\nCusto: ${formatarValor(p.custo)}\nVenda: ${formatarValor(p.venda)}\n\nExcluir?`)) {
+        // Feedback visual: anima exclusao do card
+        const card = document.querySelector(`.product-card[data-id="${id}"]`);
+        if (card) {
+            card.classList.add('deleting-card');
+            setTimeout(() => {
+                produtos = produtos.filter(x => x.id !== id);
+                salvarDados();
+                mostrarToast('Excluido!');
+                carregarEstoqueMobile();
+                atualizarDashboard();
+            }, 400);
+            return;
+        }
+        
         produtos = produtos.filter(x => x.id !== id);
         salvarDados();
         mostrarToast('Excluido!');
@@ -755,11 +910,11 @@ function carregarVendasMobile() {
     if (elLucro) elLucro.textContent = formatarValor(tl);
     
     if (!vendas.length) {
-        lista.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-bag"></i><p>Nenhuma venda</p></div>';
+        lista.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-bag"></i><p>Nenhuma venda registrada</p></div>';
         return;
     }
     
-    lista.innerHTML = vendas.slice().reverse().map(v => `<div class="sale-card">
+    lista.innerHTML = vendas.slice().reverse().map((v, index) => `<div class="sale-card stagger-card">
         <div class="product-img" style="width:40px;height:40px;font-size:1rem;"><i class="fas fa-shopping-bag"></i></div>
         <div class="sale-info"><div class="sale-product">${v.nome}</div><div class="sale-detail">${v.data} · ${v.quantidade} un · ${v.codigo}</div></div>
         <div class="sale-value"><div class="value">${formatarValor(v.total)}</div><div class="profit">+${formatarValor(v.lucro)}</div></div>
@@ -784,8 +939,39 @@ function atualizarRelatorioMobile() {
     const roi = ti > 0 ? Math.min((tv/ti)*100, 100) : 0;
     const pf = document.getElementById('progressROI');
     const tr = document.getElementById('textROI');
-    if (pf) setTimeout(() => pf.style.width = roi+'%', 100);
+    if (pf) {
+        pf.style.width = '0%';
+        pf.classList.add('animated');
+        setTimeout(() => pf.style.width = roi+'%', 100);
+    }
     if (tr) tr.textContent = roi.toFixed(1)+'% do investimento retornado';
+}
+
+// ==================== SCROLL TO TOP ====================
+function initScrollToTop() {
+    const btn = document.getElementById('scrollToTop');
+    if (!btn) return;
+    
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    });
+}
+
+// ==================== PARALLAX HEADER ====================
+function initParallaxHeader() {
+    const header = document.querySelector('.header');
+    if (!header) return;
+    
+    window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        if (scrollY < 200) {
+            header.style.transform = `translateY(${scrollY * 0.15}px)`;
+        }
+    });
 }
 
 // ==================== TEMA DARK MODE ====================
@@ -840,6 +1026,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         dateEl.textContent = hoje.charAt(0).toUpperCase() + hoje.slice(1);
     }
+    
+    // Inicializa animacoes premium
+    initScrollToTop();
+    initParallaxHeader();
     
     const custoInput = document.getElementById('custo');
     const porcentagemInput = document.getElementById('porcentagem');
