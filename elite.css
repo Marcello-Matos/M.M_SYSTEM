@@ -1,0 +1,349 @@
+/* ============================================================
+   ELITE LAYER — Tipografia premium, espaçamento 8pt,
+   sombras em camadas, micro UX e polimento extremo.
+   Carregado por último para sobrescrever camadas anteriores.
+   ============================================================ */
+
+/* ---------- Tipografia: General Sans (Fontshare) ---------- */
+:root {
+    --font-display: "General Sans", "Inter", "Poppins", system-ui, -apple-system, sans-serif;
+    --font-body:    "General Sans", "Inter", system-ui, -apple-system, sans-serif;
+
+    /* Espaçamento 8pt grid */
+    --s-1: 4px;
+    --s-2: 8px;
+    --s-3: 12px;
+    --s-4: 16px;
+    --s-5: 20px;
+    --s-6: 24px;
+    --s-7: 32px;
+    --s-8: 40px;
+    --s-9: 48px;
+    --s-10: 64px;
+
+    /* Raios consistentes */
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-xl: 28px;
+
+    /* Sombras em camadas (elevation system) */
+    --elev-1: 0 1px 2px rgba(15, 23, 42, 0.04),
+              0 1px 3px rgba(15, 23, 42, 0.06);
+    --elev-2: 0 2px 4px rgba(15, 23, 42, 0.04),
+              0 4px 12px rgba(15, 23, 42, 0.06);
+    --elev-3: 0 4px 8px rgba(15, 23, 42, 0.05),
+              0 12px 28px rgba(15, 23, 42, 0.08);
+    --elev-4: 0 8px 16px rgba(15, 23, 42, 0.06),
+              0 24px 56px rgba(15, 23, 42, 0.10);
+    --elev-5: 0 12px 24px rgba(15, 23, 42, 0.08),
+              0 40px 96px rgba(15, 23, 42, 0.14);
+
+    /* Curvas de easing naturais */
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth:    cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+    font-family: var(--font-body) !important;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.005em;
+}
+
+h1, h2, h3, h4, h5, h6,
+.login-welcome h1,
+.login-welcome p,
+.header h1,
+.section-title,
+.tab-btn,
+.btn,
+.login-button,
+.btn-submit,
+.modal-header h3,
+.empty-title,
+.empty-state-premium .empty-title,
+.empty-state-table .empty-title,
+.total-card,
+.card,
+.dashboard-card,
+.toast {
+    font-family: var(--font-display) !important;
+    letter-spacing: -0.015em;
+}
+
+h1 { letter-spacing: -0.025em; font-weight: 700; }
+h2 { letter-spacing: -0.02em;  font-weight: 700; }
+h3 { letter-spacing: -0.018em; font-weight: 650; }
+
+/* Números mais elegantes (tabular para tabelas) */
+table, .total-card, .card-value, .dashboard-card,
+input[type="number"], input[readonly] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "ss01";
+}
+
+/* ---------- Polimento extremo: alinhamento e espaçamento ---------- */
+
+/* Container com grid invisível mais consistente */
+.container {
+    padding-left: clamp(var(--s-5), 3vw, var(--s-9));
+    padding-right: clamp(var(--s-5), 3vw, var(--s-9));
+}
+
+/* Seções com respiro matemático */
+.form-section,
+.list-section {
+    padding: var(--s-7) !important;
+    border-radius: var(--r-xl) !important;
+    box-shadow: var(--elev-2) !important;
+}
+
+.form-section + .list-section,
+.list-section + .form-section {
+    margin-top: var(--s-7) !important;
+}
+
+/* Campos de formulário com altura consistente (40/44px) */
+.form-group input,
+.form-group select,
+.login-input input {
+    height: 44px;
+    padding-left: var(--s-4);
+    padding-right: var(--s-4);
+    border-radius: var(--r-md);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    transition: border-color 240ms var(--ease-smooth),
+                box-shadow 240ms var(--ease-smooth),
+                background-color 240ms var(--ease-smooth);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.login-input input:focus {
+    box-shadow: 0 0 0 4px rgba(242, 155, 48, 0.18),
+                var(--elev-1);
+}
+
+/* Botões: altura consistente, easing natural */
+.btn,
+.login-button,
+.btn-submit,
+.btn-filter,
+.tab-btn {
+    border-radius: var(--r-md) !important;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    transition: transform 280ms var(--ease-spring),
+                box-shadow 280ms var(--ease-out-quart),
+                background-color 220ms var(--ease-smooth),
+                color 220ms var(--ease-smooth) !important;
+    will-change: transform;
+}
+
+.btn:active,
+.login-button:active,
+.btn-submit:active,
+.btn-filter:active,
+.tab-btn:active {
+    transform: translateY(1px) scale(0.98);
+    transition-duration: 80ms;
+}
+
+/* Cards e modais com sombras em camadas */
+.modal-content,
+.edit-modal-content {
+    box-shadow: var(--elev-5) !important;
+    border-radius: var(--r-xl) !important;
+}
+
+.total-card,
+.dashboard-card,
+.card {
+    box-shadow: var(--elev-2);
+    transition: transform 360ms var(--ease-out-expo),
+                box-shadow 360ms var(--ease-out-expo) !important;
+}
+
+.total-card:hover,
+.dashboard-card:hover,
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--elev-3);
+}
+
+/* Tabelas: respiração e ritmo visual */
+table { border-collapse: separate; border-spacing: 0; }
+th {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: var(--s-4) var(--s-5) !important;
+}
+td {
+    padding: var(--s-4) var(--s-5) !important;
+    font-size: 0.92rem;
+}
+tbody tr {
+    transition: background-color 200ms var(--ease-smooth);
+}
+tbody tr:hover {
+    background-color: rgba(242, 155, 48, 0.06);
+}
+
+/* ---------- Micro UX: estados vazios refinados ---------- */
+.empty-state-table td {
+    padding: var(--s-9) var(--s-6) !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+.empty-state-table .empty-icon-wrap,
+.empty-state-table .empty-title,
+.empty-state-table .empty-desc {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+.empty-state-table .empty-title {
+    margin-top: var(--s-5) !important;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+.empty-state-table .empty-desc {
+    margin-top: var(--s-2) !important;
+    color: #9a7a5a;
+}
+
+/* ---------- Micro UX: skeleton loaders ---------- */
+@keyframes elite-skeleton {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(242, 226, 5, 0.08) 0%,
+        rgba(242, 155, 48, 0.18) 50%,
+        rgba(242, 226, 5, 0.08) 100%
+    );
+    background-size: 200% 100%;
+    animation: elite-skeleton 1.4s linear infinite;
+    border-radius: var(--r-sm);
+    color: transparent !important;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ---------- Micro UX: feedback tátil (ripple suave) ---------- */
+.btn,
+.login-button,
+.btn-submit,
+.btn-filter,
+.tab-btn,
+.nav-item,
+.quick-action {
+    position: relative;
+    overflow: hidden;
+}
+.btn::after,
+.login-button::after,
+.btn-submit::after,
+.btn-filter::after,
+.tab-btn::after,
+.nav-item::after,
+.quick-action::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+                rgba(255, 255, 255, 0.45) 0%,
+                rgba(255, 255, 255, 0) 60%);
+    opacity: 0;
+    transition: opacity 520ms var(--ease-out-expo);
+    pointer-events: none;
+}
+.btn.is-rippling::after,
+.login-button.is-rippling::after,
+.btn-submit.is-rippling::after,
+.btn-filter.is-rippling::after,
+.tab-btn.is-rippling::after,
+.nav-item.is-rippling::after,
+.quick-action.is-rippling::after {
+    opacity: 1;
+    transition: none;
+}
+
+/* ---------- Motion: entry states (controlados via JS GSAP) ---------- */
+.elite-fade-init { opacity: 0; transform: translateY(12px); }
+.elite-stagger-init > * { opacity: 0; transform: translateY(10px); }
+
+/* ---------- Toast refinado ---------- */
+.toast {
+    border-radius: var(--r-lg) !important;
+    box-shadow: var(--elev-4) !important;
+    font-family: var(--font-display);
+    font-weight: 550;
+    letter-spacing: -0.005em;
+}
+
+/* ---------- Scrollbar premium ---------- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(242, 155, 48, 0.45) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(242, 155, 48, 0.55), rgba(191, 54, 4, 0.45));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(242, 155, 48, 0.8), rgba(191, 54, 4, 0.7));
+    background-clip: padding-box;
+}
+
+/* ---------- Seleção de texto ---------- */
+::selection {
+    background: rgba(242, 155, 48, 0.32);
+    color: #4a2508;
+}
+
+/* ---------- Foco acessível e elegante ---------- */
+:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(242, 155, 48, 0.35),
+                0 0 0 5px rgba(242, 226, 5, 0.18);
+    border-radius: var(--r-sm);
+}
+
+/* ---------- Mobile: ajustes finos ---------- */
+@media (max-width: 768px) {
+    .form-section,
+    .list-section {
+        padding: var(--s-5) !important;
+        border-radius: var(--r-lg) !important;
+    }
+    .modal-content,
+    .edit-modal-content {
+        border-radius: var(--r-xl) var(--r-xl) 0 0 !important;
+    }
+    th, td { padding: var(--s-3) var(--s-4) !important; }
+}
+
+/* ---------- Acessibilidade: respeitar redução de movimento ---------- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}
