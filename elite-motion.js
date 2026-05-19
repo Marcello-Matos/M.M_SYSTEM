@@ -54,21 +54,18 @@
 
     /* ---------- Entry / Stagger via GSAP ---------- */
     function runEntry(gsap) {
-        // Login
+        // Login (usa fromTo + clearProps p/ nunca deixar elementos invisíveis)
         var loginCard = document.querySelector('.login-card');
         if (loginCard) {
-            gsap.from(loginCard, {
-                opacity: 0, y: 28, scale: 0.985,
-                duration: 0.9, ease: 'expo.out'
-            });
-            gsap.from('.login-hero > *', {
-                opacity: 0, y: 16, duration: 0.7,
-                ease: 'expo.out', stagger: 0.08, delay: 0.15
-            });
-            gsap.from('.login-form > *', {
-                opacity: 0, y: 14, duration: 0.6,
-                ease: 'expo.out', stagger: 0.06, delay: 0.25
-            });
+            gsap.fromTo(loginCard,
+                { opacity: 0, y: 28, scale: 0.985 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.9, ease: 'expo.out', clearProps: 'transform' });
+            gsap.fromTo('.login-hero > *',
+                { opacity: 0, y: 16 },
+                { opacity: 1, y: 0, duration: 0.7, ease: 'expo.out', stagger: 0.08, delay: 0.15, clearProps: 'all' });
+            gsap.fromTo('.login-form > *',
+                { opacity: 0, y: 14 },
+                { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out', stagger: 0.06, delay: 0.25, clearProps: 'all' });
         }
 
         // Header / abas (desktop)

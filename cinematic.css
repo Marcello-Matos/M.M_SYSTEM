@@ -1,0 +1,367 @@
+/* ============================================================
+   CINEMATIC LAYER — finalização: fluid type, microinterações,
+   detalhes invisíveis, responsividade perfeita.
+   ============================================================ */
+
+:root {
+    /* Tipografia fluida (escala perfeita 320px → 1440px) */
+    --fs-xs:   clamp(0.72rem,  0.68rem + 0.18vw, 0.80rem);
+    --fs-sm:   clamp(0.82rem,  0.78rem + 0.22vw, 0.92rem);
+    --fs-base: clamp(0.92rem,  0.88rem + 0.25vw, 1.02rem);
+    --fs-md:   clamp(1.05rem,  1.00rem + 0.32vw, 1.18rem);
+    --fs-lg:   clamp(1.25rem,  1.16rem + 0.45vw, 1.45rem);
+    --fs-xl:   clamp(1.55rem,  1.40rem + 0.75vw, 2.00rem);
+    --fs-2xl:  clamp(2.00rem,  1.70rem + 1.50vw, 2.80rem);
+    --fs-3xl:  clamp(2.40rem,  2.00rem + 2.00vw, 3.40rem);
+
+    /* Curvas cinematográficas */
+    --ease-cinema: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-magnetic: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- Tipografia fluida aplicada ---------- */
+body { font-size: var(--fs-base); }
+h1, .login-welcome h1 { font-size: var(--fs-3xl); line-height: 1.05; }
+h2, .header h1     { font-size: var(--fs-xl); line-height: 1.15; }
+h3, .modal-header h3 { font-size: var(--fs-lg); line-height: 1.2; }
+.empty-title { font-size: var(--fs-md); }
+.empty-desc, th, .toast { font-size: var(--fs-sm); }
+
+/* ---------- Scroll suave nativo ---------- */
+html { scroll-behavior: smooth; }
+
+/* ---------- Reveal cinematográfico (ScrollTrigger) ---------- */
+[data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    will-change: opacity, transform;
+}
+[data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 900ms var(--ease-cinema),
+                transform 900ms var(--ease-cinema);
+}
+
+/* ---------- Magnetic buttons (deslocamento sutil em hover) ---------- */
+.magnetic {
+    transition: transform 320ms var(--ease-magnetic);
+    will-change: transform;
+}
+
+/* ---------- Transição entre abas ---------- */
+.aba-content {
+    transition: opacity 380ms var(--ease-cinema);
+}
+.aba-content:not(.active) {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+}
+.aba-content.active {
+    opacity: 1;
+    position: relative;
+    visibility: visible;
+}
+
+/* ---------- Detalhe invisível: shimmer no logo ---------- */
+.login-logo-img,
+.header-logo-img,
+.mobile-logo-img {
+    position: relative;
+    transition: filter 400ms var(--ease-cinema),
+                transform 600ms var(--ease-cinema);
+}
+.login-logo-img:hover,
+.header-logo-img:hover,
+.mobile-logo-img:hover {
+    filter: drop-shadow(0 6px 18px rgba(242, 155, 48, 0.45));
+    transform: translateY(-2px);
+}
+
+/* ---------- Ambient pulse nos números do dashboard ---------- */
+@keyframes cinema-idle-glow {
+    0%, 100% { text-shadow: 0 0 0 rgba(242, 155, 48, 0); }
+    50%      { text-shadow: 0 0 24px rgba(242, 155, 48, 0.18); }
+}
+.total-card .card-value,
+.dashboard-card .card-value,
+.total-card h2,
+.dashboard-card h2,
+.total-card strong,
+.dashboard-card strong {
+    animation: cinema-idle-glow 5.5s ease-in-out infinite;
+}
+
+/* ---------- Counter "preparado" (sem flicker durante animação) ---------- */
+[data-counter] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* ---------- Microinteração: ícones nos botões ---------- */
+.btn i,
+.tab-btn i,
+.btn-filter i,
+.nav-item i,
+.quick-action i {
+    transition: transform 360ms var(--ease-magnetic);
+    display: inline-block;
+    will-change: transform;
+}
+.btn:hover i,
+.tab-btn:hover i,
+.btn-filter:hover i,
+.quick-action:hover i {
+    transform: translateY(-2px) rotate(-4deg);
+}
+.btn-primary:hover i,
+.btn-success:hover i {
+    transform: translateX(2px);
+}
+
+/* ---------- Aba ativa: linha animada (underline cinematográfico) ---------- */
+.tab-btn { position: relative; }
+.tab-btn::before {
+    content: "";
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: 6px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #F2E205, #F29B30, #BF3604);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 420ms var(--ease-cinema);
+}
+.tab-btn.active::before { transform: scaleX(1); }
+
+/* ---------- Inputs: label flutuante de foco ---------- */
+.form-group input:focus,
+.form-group select:focus,
+.login-input input:focus {
+    transform: translateY(-1px);
+}
+
+/* ---------- Detalhe invisível: brilho ambiente que segue cursor ---------- */
+.cinema-spot {
+    position: fixed;
+    pointer-events: none;
+    width: 540px;
+    height: 540px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+                rgba(242, 226, 5, 0.10) 0%,
+                rgba(242, 155, 48, 0.05) 35%,
+                rgba(242, 155, 48, 0) 70%);
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    mix-blend-mode: multiply;
+    transition: opacity 600ms var(--ease-cinema);
+    opacity: 0;
+    will-change: transform, opacity;
+}
+.cinema-spot.is-active { opacity: 1; }
+
+/* ---------- Modal backdrop com profundidade real ---------- */
+.modal {
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    background: rgba(74, 37, 8, 0.28) !important;
+    transition: opacity 360ms var(--ease-cinema),
+                backdrop-filter 360ms var(--ease-cinema);
+}
+
+/* ---------- Toast: deslize cinematográfico ---------- */
+.toast.show {
+    animation: cinema-toast-in 0.6s var(--ease-cinema);
+}
+@keyframes cinema-toast-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- Responsividade perfeita ---------- */
+@media (max-width: 1280px) {
+    .container { max-width: 100%; }
+}
+
+@media (max-width: 1024px) {
+    .totais-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-row { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 720px) {
+    .totais-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row { grid-template-columns: 1fr; }
+    .filtros { flex-wrap: wrap; gap: 8px; }
+    .tabs { gap: 6px; flex-wrap: wrap; }
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { width: 100%; }
+}
+
+@media (max-width: 420px) {
+    .totais-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: var(--fs-lg); }
+    .toast { left: 16px; right: 16px; bottom: 80px; }
+}
+
+/* ---------- Touch devices: desativar tilt e magnetismo ---------- */
+@media (hover: none), (pointer: coarse) {
+    .magnetic { transform: none !important; }
+    .total-card:hover,
+    .dashboard-card:hover,
+    .card:hover { transform: none; }
+    .cinema-spot { display: none; }
+}
+
+/* ============================================================
+   LOGIN — Responsividade e contraste à prova de bala
+   ============================================================ */
+
+/* Garante que elementos do login NUNCA fiquem invisíveis,
+   mesmo se GSAP/CSS de animação falhar */
+.login-card,
+.login-hero > *,
+.login-form > *,
+.login-input,
+.login-input input,
+.login-welcome,
+.login-welcome h1,
+.login-welcome p,
+.login-form h2,
+.login-form > p,
+.login-button {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Contraste forte no hero (texto branco + sombra suave) */
+.login-welcome h1 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 14px rgba(74, 37, 8, 0.35);
+    font-weight: 700;
+}
+.login-welcome p {
+    color: rgba(255, 255, 255, 0.94) !important;
+    text-shadow: 0 1px 8px rgba(74, 37, 8, 0.25);
+}
+
+/* Painel do form: títulos legíveis e inputs com borda visível */
+.login-form h2 {
+    color: #4a2508 !important;
+    font-weight: 700;
+}
+.login-form > p {
+    color: #8a6a4a !important;
+}
+.login-input { position: relative; }
+.login-input input {
+    background: #ffffff !important;
+    color: #2a1606 !important;
+    border: 1.5px solid rgba(242, 155, 48, 0.45) !important;
+    box-shadow: 0 2px 6px rgba(191, 54, 4, 0.06) !important;
+    padding-left: 48px !important;
+    padding-right: 16px !important;
+}
+.login-input input::placeholder {
+    color: #b89878 !important;
+}
+.login-input i {
+    color: #BF3604 !important;
+    position: absolute !important;
+    left: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none;
+    z-index: 2;
+    font-size: 0.95rem;
+}
+
+/* ---------- Mobile (≤ 768px): stacking e proporções ---------- */
+@media (max-width: 768px) {
+    .login-screen {
+        padding: 16px !important;
+        align-items: flex-start !important;
+        padding-top: 24px !important;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+    .login-card {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        min-height: auto !important;
+        max-width: 460px;
+        margin: 0 auto;
+        border-radius: 22px !important;
+        overflow: hidden;
+    }
+    .login-hero {
+        padding: 28px 24px 24px !important;
+        min-height: auto !important;
+        gap: 14px !important;
+        text-align: left;
+    }
+    .login-logo { display: flex; justify-content: center; }
+    .login-logo-img,
+    .header-logo-img {
+        max-height: 56px !important;
+    }
+    .login-welcome h1 {
+        font-size: clamp(1.6rem, 7vw, 2.1rem) !important;
+        line-height: 1.05;
+        margin-bottom: 6px !important;
+    }
+    .login-welcome p {
+        font-size: 0.86rem !important;
+        max-width: 100% !important;
+    }
+    .login-panel {
+        padding: 24px 22px 28px !important;
+    }
+    .login-form { width: 100% !important; }
+    .login-form h2 { font-size: 1.5rem !important; margin-bottom: 4px; }
+    .login-form > p  { font-size: 0.85rem; margin-bottom: 18px; }
+    .login-input { margin-bottom: 14px !important; }
+    .login-input input {
+        height: 48px !important;
+        font-size: 0.95rem !important;
+    }
+    .login-button {
+        height: 50px;
+        font-size: 1rem;
+    }
+}
+
+/* ---------- Mobile pequeno (≤ 380px) ---------- */
+@media (max-width: 380px) {
+    .login-screen { padding: 12px !important; padding-top: 16px !important; }
+    .login-hero { padding: 22px 18px !important; }
+    .login-panel { padding: 20px 18px 22px !important; }
+    .login-welcome h1 { font-size: 1.5rem !important; }
+}
+
+/* ---------- Altura curta (paisagem) ---------- */
+@media (max-height: 640px) and (max-width: 768px) {
+    .login-screen { align-items: flex-start !important; padding-top: 12px !important; }
+    .login-hero { padding: 18px 22px !important; }
+    .login-logo-img { max-height: 44px !important; }
+    .login-welcome h1 { font-size: 1.3rem !important; }
+    .login-welcome p { display: none; }
+    .login-panel { padding: 18px 22px 22px !important; }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    [data-reveal] { opacity: 1 !important; transform: none !important; }
+    .total-card .card-value,
+    .dashboard-card .card-value,
+    .total-card h2,
+    .dashboard-card h2,
+    .total-card strong,
+    .dashboard-card strong { animation: none !important; }
+    .cinema-spot { display: none !important; }
+}
