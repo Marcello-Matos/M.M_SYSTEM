@@ -1,0 +1,656 @@
+/* ===================================================== */
+/* DARK MODE - M.M System Premium                        */
+/* ===================================================== */
+
+/* ------------------- Variáveis Dark ------------------- */
+.dark-mode {
+  --dm-bg-deep: #0a0a0f;
+  --dm-bg-base: #111118;
+  --dm-bg-card: rgba(255, 255, 255, 0.045);
+  --dm-bg-card-solid: #16161f;
+  --dm-bg-input: rgba(255, 255, 255, 0.06);
+  --dm-bg-hover: rgba(255, 255, 255, 0.08);
+  --dm-bg-elevated: #1a1a26;
+
+  --dm-text-primary: #e2e2e8;
+  --dm-text-secondary: #a0a0b0;
+  --dm-text-muted: #6e6e80;
+  --dm-text-heading: #f0f0f5;
+
+  --dm-border-subtle: rgba(255, 255, 255, 0.08);
+  --dm-border-medium: rgba(255, 255, 255, 0.12);
+  --dm-border-strong: rgba(255, 255, 255, 0.18);
+
+  --dm-glow-primary: 0 0 20px rgba(242, 155, 48, 0.25);
+  --dm-glow-success: 0 0 20px rgba(72, 187, 120, 0.22);
+  --dm-glow-danger: 0 0 20px rgba(245, 101, 101, 0.22);
+  --dm-glow-info: 0 0 20px rgba(66, 153, 225, 0.22);
+
+  --dm-glass-bg: rgba(255, 255, 255, 0.05);
+  --dm-glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --dm-glass-blur: blur(20px) saturate(1.2);
+
+  --dm-neon-primary: rgba(242, 155, 48, 0.35);
+  --dm-neon-secondary: rgba(242, 226, 5, 0.3);
+}
+
+/* ------------------- Fundo Dark Global ------------------- */
+.dark-mode,
+.dark-mode body,
+.dark-mode html {
+  background: radial-gradient(circle at 12% 8%, rgba(242, 155, 48, 0.08), transparent 32%),
+              radial-gradient(circle at 88% 18%, rgba(242, 5, 5, 0.06), transparent 28%),
+              linear-gradient(135deg, #0a0a0f 0%, #111118 50%, #16121a 100%) !important;
+  color: #e2e2e8 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.dark-mode #desktop-version {
+  background: transparent !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+}
+
+.dark-mode body::before {
+  background: radial-gradient(circle, rgba(242, 155, 48, 0.12), transparent 68%);
+}
+
+.dark-mode body::after {
+  background: radial-gradient(circle, rgba(242, 5, 5, 0.08), transparent 68%);
+}
+
+/* ------------------- Login Dark ------------------- */
+.dark-mode .login-screen {
+  background: radial-gradient(circle at top left, rgba(242, 155, 48, 0.1), transparent 34%),
+              radial-gradient(circle at bottom right, rgba(242, 5, 5, 0.08), transparent 32%),
+              linear-gradient(135deg, #0a0a0f 0%, #111118 52%, #1a1218 100%) !important;
+}
+
+.dark-mode .login-card {
+  background: rgba(18, 18, 26, 0.92) !important;
+  border: 1px solid rgba(242, 155, 48, 0.2) !important;
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.55) !important;
+}
+
+.dark-mode .login-hero {
+  background: linear-gradient(135deg, rgba(13, 13, 13, 0.98), rgba(191, 54, 4, 0.7)),
+              linear-gradient(150deg, #0a0a0f 0%, #1a1210 56%, #2a1810 100%) !important;
+}
+
+.dark-mode .login-hero::before {
+  background: repeating-linear-gradient(135deg, rgba(242, 226, 5, 0.08) 0 2px, transparent 2px 34px);
+}
+
+.dark-mode .login-hero::after {
+  background: rgba(242, 155, 48, 0.15);
+}
+
+.dark-mode .login-welcome h1,
+.dark-mode .login-welcome p {
+  color: #f0f0f5 !important;
+}
+
+.dark-mode .login-panel {
+  background: linear-gradient(180deg, #12121a 0%, #0e0e16 100%) !important;
+}
+
+.dark-mode .login-form h2 {
+  color: #f0f0f5 !important;
+}
+
+.dark-mode .login-form > p {
+  color: #a0a0b0;
+}
+
+.dark-mode .login-input input {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #e2e2e8 !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.dark-mode .login-input input:focus {
+  border-color: #F29B30 !important;
+  box-shadow: 0 0 0 4px rgba(242, 155, 48, 0.15), 0 12px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark-mode .login-input i {
+  color: #6e6e80;
+}
+
+.dark-mode .login-remember {
+  color: #a0a0b0;
+}
+
+.dark-mode .login-error {
+  color: #ff6b6b;
+}
+
+/* ------------------- Header Desktop Dark ------------------- */
+.dark-mode .header,
+.dark-mode .header p {
+  color: #f0f0f5 !important;
+}
+
+.dark-mode .logout-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #e2e2e8 !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+}
+
+.dark-mode .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ------------------- Abas Dark ------------------- */
+.dark-mode .tabs {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+}
+
+.dark-mode .tab-btn {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #a0a0b0 !important;
+}
+
+.dark-mode .tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e2e2e8 !important;
+}
+
+.dark-mode .tab-btn.active {
+  background: linear-gradient(135deg, #F2E205 0%, #F29B30 100%) !important;
+  color: #0a0a0f !important;
+  box-shadow: 0 0 20px rgba(242, 155, 48, 0.25);
+}
+
+/* ------------------- Cards & Sections Dark ------------------- */
+.dark-mode .form-section,
+.dark-mode .list-section,
+.dark-mode .totais-section {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35) !important;
+}
+
+.dark-mode .form-section h2,
+.dark-mode .list-section h2,
+.dark-mode .totais-section h2 {
+  color: #f0f0f5 !important;
+}
+
+.dark-mode .form-section h2 i,
+.dark-mode .list-section h2 i {
+  color: #F29B30 !important;
+}
+
+/* ------------------- Formulários Dark ------------------- */
+.dark-mode .form-group label {
+  color: #a0a0b0 !important;
+}
+
+.dark-mode .form-group input,
+.dark-mode .form-group select {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #e2e2e8 !important;
+}
+
+.dark-mode .form-group input:focus,
+.dark-mode .form-group select:focus {
+  border-color: #F29B30 !important;
+  box-shadow: 0 0 0 3px rgba(242, 155, 48, 0.15);
+}
+
+.dark-mode .form-group input[readonly] {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #6e6e80 !important;
+}
+
+/* ------------------- Botões Dark ------------------- */
+.dark-mode .btn-secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #a0a0b0 !important;
+}
+
+.dark-mode .btn-secondary:hover {
+  background: #1a1a26 !important;
+}
+
+.dark-mode .btn-edit {
+  background: #F29B30 !important;
+}
+
+.dark-mode .btn-danger,
+.dark-mode .btn-delete {
+  background: linear-gradient(135deg, #F20505 0%, #BF3604 100%) !important;
+}
+
+.dark-mode .btn-filter,
+.dark-mode .chip {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #a0a0b0 !important;
+}
+
+.dark-mode .btn-filter.active,
+.dark-mode .btn-filter:hover,
+.dark-mode .chip.active {
+  background: linear-gradient(135deg, #F29B30, #BF3604) !important;
+  color: white !important;
+  box-shadow: 0 0 20px rgba(242, 155, 48, 0.25);
+}
+
+/* ------------------- Tabela Dark ------------------- */
+.dark-mode .table-container {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode table {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode th {
+  background: linear-gradient(180deg, #1a1a26 0%, #14141e 100%) !important;
+  color: #F2E205 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode td {
+  background: transparent !important;
+  color: #e2e2e8 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode tr:hover td {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ------------------- Total Cards Dark ------------------- */
+.dark-mode .total-card {
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .total-card.investimento {
+  background: linear-gradient(135deg, #1a1210 0%, #2a1810 100%) !important;
+  border: 1px solid rgba(191, 54, 4, 0.3);
+}
+
+.dark-mode .total-card.vendas {
+  background: linear-gradient(135deg, #1a1810 0%, #2a2010 100%) !important;
+  border: 1px solid rgba(242, 155, 48, 0.3);
+}
+
+.dark-mode .total-card.lucro {
+  background: linear-gradient(135deg, #181a10 0%, #202810 100%) !important;
+  border: 1px solid rgba(242, 226, 5, 0.25);
+  color: #f0f0f5 !important;
+}
+
+.dark-mode .total-card.estoque {
+  background: linear-gradient(135deg, #1a1010 0%, #2a1818 100%) !important;
+  border: 1px solid rgba(242, 5, 5, 0.25);
+}
+
+.dark-mode .total-label {
+  color: #a0a0b0;
+}
+
+.dark-mode .total-value {
+  color: #f0f0f5;
+}
+
+/* ------------------- Modal Dark ------------------- */
+.dark-mode .modal {
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(12px);
+}
+
+.dark-mode .modal-content {
+  background: #16161f !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-mode .modal-header h3 {
+  color: #f0f0f5 !important;
+}
+
+.dark-mode .btn-close {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #a0a0b0 !important;
+}
+
+.dark-mode .btn-close:hover {
+  background: #1a1a26 !important;
+  color: #e2e2e8 !important;
+}
+
+/* ------------------- Status Badges Dark ------------------- */
+.dark-mode .status-disponivel {
+  background: rgba(72, 187, 120, 0.12) !important;
+  color: #48bb78 !important;
+}
+
+.dark-mode .status-vendido {
+  background: rgba(245, 101, 101, 0.12) !important;
+  color: #f56565 !important;
+}
+
+.dark-mode .status-parcial {
+  background: rgba(237, 137, 54, 0.12) !important;
+  color: #ed8936 !important;
+}
+
+/* ------------------- Toast Dark ------------------- */
+.dark-mode .toast {
+  background: #1a1a26 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e2e8 !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .toast i {
+  color: #48bb78;
+}
+
+/* ------------------- Mobile Dark ------------------- */
+@media (max-width: 768px) {
+  .dark-mode body {
+    background: #0a0a0f !important;
+  }
+
+  .dark-mode .app-header {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1210 70%, #2a1810 100%) !important;
+    border-bottom: 2px solid rgba(242, 155, 48, 0.15);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+  }
+
+  .dark-mode .card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  .dark-mode .card-label {
+    color: #6e6e80;
+  }
+
+  .dark-mode .card-value {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .action-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  .dark-mode .action-btn span {
+    color: #e2e2e8;
+  }
+
+  .dark-mode .page-header h2 {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .btn-back {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #e2e2e8 !important;
+  }
+
+  .dark-mode .search-bar input {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #e2e2e8;
+  }
+
+  .dark-mode .search-bar input:focus {
+    border-color: #F29B30;
+  }
+
+  .dark-mode .search-bar i {
+    color: #6e6e80;
+  }
+
+  .dark-mode .chip {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #a0a0b0 !important;
+  }
+
+  .dark-mode .chip.active {
+    background: linear-gradient(135deg, #F29B30, #BF3604) !important;
+    color: white !important;
+  }
+
+  .dark-mode .product-card,
+  .dark-mode .sale-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  .dark-mode .product-name {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .product-meta {
+    color: #6e6e80;
+  }
+
+  .dark-mode .product-price .price {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .product-price .stock {
+    color: #6e6e80;
+  }
+
+  .dark-mode .sale-product {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .sale-detail {
+    color: #6e6e80;
+  }
+
+  .dark-mode .sale-value .value {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .summary-item {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  .dark-mode .summary-label {
+    color: #6e6e80;
+  }
+
+  .dark-mode .summary-value {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .report-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  .dark-mode .report-label {
+    color: #6e6e80;
+  }
+
+  .dark-mode .report-value {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .progress-section {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  .dark-mode .progress-section h3 {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .progress-bar {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .dark-mode .progress-text {
+    color: #6e6e80;
+  }
+
+  .dark-mode .bottom-nav {
+    background: rgba(10, 10, 15, 0.88) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(22px) saturate(1.16);
+  }
+
+  .dark-mode .nav-item {
+    color: #6e6e80;
+  }
+
+  .dark-mode .nav-item.active {
+    color: #F29B30 !important;
+  }
+
+  .dark-mode .center-icon {
+    border-color: #0a0a0f;
+  }
+
+  .dark-mode .venda-info {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .dark-mode .venda-item span {
+    color: #6e6e80;
+  }
+
+  .dark-mode .venda-item strong {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .dashboard-header h2 {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .dashboard-header .date {
+    color: #6e6e80;
+  }
+
+  .dark-mode .section-title h3 {
+    color: #f0f0f5;
+  }
+
+  .dark-mode .empty-state {
+    color: #6e6e80;
+  }
+}
+
+/* ------------------- Toggle Button ------------------- */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 99999;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(242, 155, 48, 0.5);
+  background: linear-gradient(135deg, #F29B30, #BF3604);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 0 20px rgba(242, 155, 48, 0.3);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Light mode toggle styling */
+body:not(.dark-mode) .theme-toggle {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-color: rgba(102, 126, 234, 0.5);
+  color: white;
+}
+
+body:not(.dark-mode) .theme-toggle:hover {
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Mobile toggle positioning */
+@media (max-width: 768px) {
+  .theme-toggle {
+    top: auto;
+    bottom: 90px;
+    left: 16px;
+    right: auto;
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+}
+
+/* ------------------- Neon Glows Active ------------------- */
+.dark-mode .btn-primary:hover,
+.dark-mode .btn-submit:hover,
+.dark-mode .login-button:hover {
+  box-shadow: 0 0 20px rgba(242, 155, 48, 0.25);
+}
+
+.dark-mode .btn-success:hover {
+  box-shadow: 0 0 20px rgba(72, 187, 120, 0.22);
+}
+
+.dark-mode .btn-danger:hover,
+.dark-mode .btn-delete:hover {
+  box-shadow: 0 0 20px rgba(245, 101, 101, 0.22);
+}
+
+.dark-mode .form-group input:focus,
+.dark-mode .form-group select:focus {
+  box-shadow: 0 0 0 3px rgba(242, 155, 48, 0.15), 0 0 20px rgba(242, 155, 48, 0.25);
+}
+
+/* ------------------- Glassmorphism Enhancement ------------------- */
+.dark-mode .form-section::before,
+.dark-mode .list-section::before,
+.dark-mode .card::before,
+.dark-mode .product-card::before,
+.dark-mode .sale-card::before,
+.dark-mode .modal-content::before,
+.dark-mode .total-card::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 42%, rgba(242, 155, 48, 0.04));
+}
+
+/* ------------------- Transitions Global ------------------- */
+.dark-mode,
+.dark-mode *,
+.dark-mode *::before,
+.dark-mode *::after {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.25s ease, box-shadow 0.35s ease;
+}

@@ -1,0 +1,107 @@
+/* ===================================================== */
+/* DESIGN TOKENS - M.M System                            */
+/* ===================================================== */
+
+/* ------------------- Paleta de Cores ------------------- */
+:root {
+  /* Primária e Secundária */
+  --color-primary: #667eea;
+  --color-secondary: #764ba2;
+
+  /* Neutros */
+  --color-white: #ffffff;
+  --color-gray-100: #f7fafc;
+  --color-gray-200: #edf2f7;
+  --color-gray-300: #e2e8f0;
+  --color-gray-400: #cbd5e0;
+  --color-gray-500: #a0aec0;
+  --color-gray-600: #718096;
+  --color-gray-700: #4a5568;
+  --color-gray-800: #2d3748;
+  --color-gray-900: #1a202c;
+
+  /* Semânticas */
+  --color-success: #48bb78;
+  --color-success-light: #d4edda;
+  --color-success-dark: #155724;
+  --color-warning: #ed8936;
+  --color-warning-light: #fff3cd;
+  --color-warning-dark: #856404;
+  --color-danger: #f56565;
+  --color-danger-light: #f8d7da;
+  --color-danger-dark: #721c24;
+  --color-info: #4299e1;
+
+  /* Premium (M.M Store) */
+  --premium-black: #0D0D0D;
+  --premium-brown: #BF3604;
+  --premium-red: #F20505;
+  --premium-orange: #F29B30;
+  --premium-gold: #F2E205;
+  --premium-cream: #fff8e8;
+  --premium-card: rgba(255, 255, 255, 0.96);
+  --premium-border: rgba(242, 155, 48, 0.22);
+  --premium-shadow: 0 22px 60px rgba(13, 13, 13, 0.22);
+  --premium-soft-shadow: 0 12px 32px rgba(13, 13, 13, 0.12);
+
+  /* ------------------- Tipografia ------------------- */
+  --font-family-base: 'Poppins', sans-serif;
+  --font-family-mobile: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --font-size-xs: 0.7rem;
+  --font-size-sm: 0.85rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.2rem;
+  --font-size-2xl: 1.3rem;
+  --font-size-3xl: 1.5rem;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ------------------- Espaçamentos ------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ------------------- Bordas ------------------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* ------------------- Sombras ------------------- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  /* ------------------- Transições ------------------- */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* ------------------- Z-Index ------------------- */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 1000;
+  --z-toast: 2000;
+
+  /* ------------------- Breakpoints ------------------- */
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+}

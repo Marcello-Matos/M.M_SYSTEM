@@ -788,26 +788,45 @@ function atualizarRelatorioMobile() {
     if (tr) tr.textContent = roi.toFixed(1)+'% do investimento retornado';
 }
 
-// ==================== TEMA ====================
-function toggleTheme() {
-    const html = document.documentElement;
+// ==================== TEMA DARK MODE ====================
+function toggleDarkMode() {
+    const body = document.body;
     const icon = document.getElementById('themeIcon');
-    const isDark = html.getAttribute('data-theme') === 'dark';
-    
+    const isDark = body.classList.contains('dark-mode');
+
     if (isDark) {
-        html.removeAttribute('data-theme');
+        body.classList.remove('dark-mode');
         if (icon) icon.className = 'fas fa-moon';
-        localStorage.setItem('theme', 'light');
+        localStorage.setItem('mm_theme', 'light');
     } else {
-        html.setAttribute('data-theme', 'dark');
+        body.classList.add('dark-mode');
         if (icon) icon.className = 'fas fa-sun';
-        localStorage.setItem('theme', 'dark');
+        localStorage.setItem('mm_theme', 'dark');
     }
+}
+
+function carregarTemaSalvo() {
+    const temaSalvo = localStorage.getItem('mm_theme');
+    const icon = document.getElementById('themeIcon');
+
+    if (temaSalvo === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (icon) icon.className = 'fas fa-sun';
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (icon) icon.className = 'fas fa-moon';
+    }
+}
+
+// ==================== TEMA (legado - mantido para compatibilidade) ====================
+function toggleTheme() {
+    toggleDarkMode();
 }
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function() {
     configurarLogin();
+    carregarTemaSalvo();
     
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
