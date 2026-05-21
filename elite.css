@@ -246,17 +246,22 @@ tbody tr:hover {
 .login-button,
 .btn-submit,
 .btn-filter,
-.tab-btn,
 .nav-item,
 .quick-action {
     position: relative;
     overflow: hidden;
 }
+
+/* Forçar remoção de qualquer ::after ou ::before nas abas */
+.tab-btn::after,
+.tab-btn::before {
+    display: none !important;
+    content: none !important;
+}
 .btn::after,
 .login-button::after,
 .btn-submit::after,
 .btn-filter::after,
-.tab-btn::after,
 .nav-item::after,
 .quick-action::after {
     content: "";
@@ -273,7 +278,6 @@ tbody tr:hover {
 .login-button.is-rippling::after,
 .btn-submit.is-rippling::after,
 .btn-filter.is-rippling::after,
-.tab-btn.is-rippling::after,
 .nav-item.is-rippling::after,
 .quick-action.is-rippling::after {
     opacity: 1;

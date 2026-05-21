@@ -470,6 +470,12 @@ body {
     font-family: var(--font-family-base);
 }
 
+.tab-btn::after,
+.tab-btn::before {
+    display: none !important;
+    content: none !important;
+}
+
 .tab-btn:hover {
     background: rgba(255,255,255,0.3);
     transform: translateY(-2px);
@@ -491,6 +497,9 @@ body {
 
 .aba-content.active {
     display: block;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-4);
 }
 
 /* FORMULARIOS */
@@ -1938,15 +1947,17 @@ body {
     margin-left: auto;
     margin-right: auto;
     border-radius: 18px;
-    background: rgba(13, 13, 13, 0.28);
-    border: 1px solid rgba(242, 226, 5, 0.16);
+    background: rgba(255, 250, 240, 0.92);
+    border: 1px solid rgba(242, 155, 48, 0.28);
     backdrop-filter: blur(14px);
+    box-shadow: 0 8px 24px rgba(191, 54, 4, 0.08);
 }
 
 .tab-btn {
-    border: 1px solid rgba(242, 226, 5, 0.18);
-    background: rgba(13, 13, 13, 0.38);
+    border: 1px solid rgba(242, 155, 48, 0.35);
+    background: rgba(255, 255, 255, 0.85);
     border-radius: 14px;
+    color: #BF3604;
 }
 
 .tab-btn.active,
@@ -2305,7 +2316,7 @@ button,
 .btn,
 .btn-submit,
 .login-button,
-.tab-btn,
+.btn,
 .nav-item,
 .action-btn,
 .card,
@@ -2318,9 +2329,7 @@ button,
 .btn,
 .btn-submit,
 .login-button,
-.tab-btn,
 .action-btn,
-.nav-item.center-btn,
 .center-icon {
     position: relative;
     overflow: hidden;
@@ -2329,7 +2338,6 @@ button,
 .btn::after,
 .btn-submit::after,
 .login-button::after,
-.tab-btn::after,
 .action-btn::after,
 .center-icon::after {
     content: '';
@@ -2346,7 +2354,6 @@ button,
 .btn:hover::after,
 .btn-submit:hover::after,
 .login-button:hover::after,
-.tab-btn:hover::after,
 .action-btn:hover::after,
 .center-icon:hover::after {
     animation: shineSweep 0.85s ease;

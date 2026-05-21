@@ -159,6 +159,12 @@
   color: #a0a0b0 !important;
 }
 
+.dark-mode .tab-btn::after,
+.dark-mode .tab-btn::before {
+  display: none !important;
+  content: none !important;
+}
+
 .dark-mode .tab-btn:hover {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #e2e2e8 !important;

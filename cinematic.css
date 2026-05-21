@@ -123,7 +123,6 @@ html { scroll-behavior: smooth; }
 }
 
 /* ---------- Aba ativa: linha animada (underline cinematográfico) ---------- */
-.tab-btn { position: relative; }
 .tab-btn::before {
     content: "";
     position: absolute;
@@ -138,6 +137,12 @@ html { scroll-behavior: smooth; }
     transition: transform 420ms var(--ease-cinema);
 }
 .tab-btn.active::before { transform: scaleX(1); }
+
+/* Forçar remoção de qualquer ::after nas abas */
+.tab-btn::after {
+    display: none !important;
+    content: none !important;
+}
 
 /* ---------- Inputs: label flutuante de foco ---------- */
 .form-group input:focus,

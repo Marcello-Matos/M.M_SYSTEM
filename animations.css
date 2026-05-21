@@ -96,30 +96,15 @@
 .tab-btn {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform, background-color, box-shadow;
-    position: relative;
-    overflow: hidden;
 }
-.tab-btn::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-    border-radius: 3px 3px 0 0;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.tab-btn::after,
+.tab-btn::before {
+    display: none !important;
+    content: none !important;
 }
 .tab-btn:hover {
     background: rgba(255, 255, 255, 0.35);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-}
-.tab-btn:hover::after {
-    width: 60%;
-    left: 20%;
-}
-.tab-btn.active::after {
-    width: 0;
 }
 
 /* .btn-filter: borda brilha + scale(1.05) */
